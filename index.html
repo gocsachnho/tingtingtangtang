@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ting Ting Tang Tang</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="./assets/css/main.css">
+
+</head>
+<body data-page="home">
+
+<header class="header">
+  <a class="logo" href="./index.html">TingTing<br>TangTang</a>
+
+  <nav class="nav">
+  <a href="./index.html">Trang chủ</a>
+  <a href="#">Thể loại</a>
+  <a href="#">Tác giả</a>
+  <a href="#">Kênh Youtube</a>
+</nav>
+
+  <div class="search-box">
+    <input id="searchInput" type="text" placeholder="Tìm truyện...">
+    <button id="searchBtn">🔍</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="heroSection">
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <p class="tag">TRUYỆN LINH DỊ DÀI KỲ</p>
+     <h1 id="heroTitle">
+<span>DÂN</span>
+<span>GIAN</span>
+<span>DỊ</span>
+<span>VĂN</span>
+<span>LỤC</span>
+</h1>
+
+      <p id="heroQuote" class="quote">
+        “Có những lời nguyền<br>
+        không cần ma quỷ<br>
+        Có những bí mật<br>
+        chỉ được chôn cùng người chết.”
+      </p>
+
+      <div class="hero-buttons">
+        <a id="heroReadBtn" class="btn red" href="#">📖 Đọc ngay</a>
+        <a id="heroDetailBtn" class="btn dark" href="#">Xem giới thiệu</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section two-cols">
+    <div class="panel">
+      <h2>Chương mới nhất</h2>
+      <div id="latestChapters"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Về truyện</h2>
+      <div id="aboutStory"></div>
+    </div>
+  </section>
+
+  <section class="features">
+    <div>📖<h3>Truyện độc quyền</h3><p>Nhiều truyện linh dị hấp dẫn.</p></div>
+    <div>📜<h3>Cập nhật nhanh</h3><p>Chương mới mỗi ngày.</p></div>
+    <div>🏮<h3>Giao diện tối ưu</h3><p>Dễ đọc, dễ theo dõi.</p></div>
+    <div>👥<h3>Cộng đồng</h3><p>Lưu, đọc, bình luận.</p></div>
+    <div>▶<h3>Youtube</h3><p>Kết nối kênh kể chuyện.</p></div>
+  </section>
+
+  <section id="stories" class="section">
+    <h2>Truyện đề cử</h2>
+    <div id="storyList" class="story-grid"></div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div>
+    <div class="footer-logo">TingTing<br>TangTang</div>
+    <p>Mang đến những câu chuyện linh dị, kinh dị và huyền bí đặc sắc nhất.</p>
+  </div>
+
+  <div>
+    <h3>Khám phá</h3>
+    <a href="./index.html">Trang chủ</a>
+    <a href="#stories">Danh sách truyện</a>
+    </div>
+
+  <div>
+    <h3>Hỗ trợ</h3>
+    <a href="#">Hướng dẫn đọc truyện</a>
+    <a href="#">Quy định cộng đồng</a>
+    <a href="#">Liên hệ</a>
+  </div>
+
+  <div>
+    <h3>Kết nối</h3>
+    <p>Theo dõi kênh Youtube để nghe truyện ma mới nhất.</p>
+    <a class="youtube-btn" href="#">▶ Đến kênh Youtube</a>
+  </div>
+</footer>
+
+<script src="./assets/js/app.js"></script>
+</body>
+</html>

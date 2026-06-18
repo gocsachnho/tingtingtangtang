@@ -1,0 +1,153 @@
+{
+  "stories": [
+    {
+      "id": "dan-gian-di-van-luc",
+      "title": "Dân Gian Dị Văn Lục",
+      "author": "La Tiểu Kỳ",
+      "status": "Đang ra",
+      "views": 15300,
+      "rating": "4.9",
+      "genres": ["Linh Dị", "Huyền Bí"],
+      "short_description": "Những câu chuyện kỳ dị được lưu truyền trong dân gian suốt nhiều thế hệ...",
+      "description": "Dân Gian Dị Văn Lục là tuyển tập những câu chuyện linh dị được lưu truyền qua nhiều thế hệ, nơi ranh giới giữa người và ma, sống và chết trở nên mờ nhạt.",
+      "quote": "“Có những lời nguyền<br>không cần ma quỷ<br>Có những bí mật<br>chỉ được chôn cùng người chết.”",
+      "cover_image": "./assets/images/hero-bg.jpg",
+      "hero_image": "./assets/images/hero-bg.jpg",
+      "affiliate_book_link": "https://shopee.vn/",
+      "chapters": [
+        {
+          "id": "210",
+          "number": 210,
+          "title": "Người Mai Táng",
+          "date": "20/05/2024",
+          "next_chapter_shortlink": "https://example.com/shortlink-211",
+          "content": [
+            "Đêm xuống, gió từ phía nghĩa địa thổi qua từng mái nhà cũ kỹ.",
+            "Người trong thôn đều nói, nếu nghe thấy tiếng chuông đồng lúc nửa đêm thì tuyệt đối không được mở cửa.",
+            "Ta vốn không tin chuyện ma quỷ, cho đến khi tận mắt nhìn thấy chiếc quan tài đỏ nằm giữa sân nhà mình."
+          ]
+        },
+        {
+          "id": "209",
+          "number": 209,
+          "title": "Huyết Lệ Quan Tài",
+          "date": "20/05/2024",
+          "next_chapter_shortlink": "https://example.com/shortlink-210",
+          "content": [
+            "Quan tài đặt dưới gốc đa già, trên nắp gỗ còn vương một vệt máu khô.",
+            "Không ai biết người nằm bên trong là ai.",
+            "Chỉ biết từ đêm ấy, trong thôn bắt đầu có người mất tích."
+          ]
+        },
+        {
+          "id": "208",
+          "number": 208,
+          "title": "Bóng Ma Dưới Giếng",
+          "date": "19/05/2024",
+          "next_chapter_shortlink": "https://example.com/shortlink-209",
+          "content": [
+            "Chiếc giếng cổ sau miếu hoang đã bị phong kín hơn hai mươi năm.",
+            "Nhưng mỗi khi trời mưa, người ta lại nghe thấy tiếng khóc vọng lên từ đáy giếng.",
+            "Ta cúi xuống nhìn, và thấy một khuôn mặt trắng bệch đang nhìn lại mình."
+          ]
+        },
+        {
+          "id": "207",
+          "number": 207,
+          "title": "Lời Nguyền Bất Hưởng",
+          "date": "19/05/2024",
+          "next_chapter_shortlink": "https://example.com/shortlink-208",
+          "content": [
+            "Trong gia phả nhà họ Trần có một trang bị xé mất.",
+            "Người già trong họ nói, đó là trang ghi về một lời nguyền không được nhắc tên.",
+            "Nhưng ta đã vô tình tìm thấy nó trong chiếc rương dưới bàn thờ."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "am-sai-dan-lo",
+      "title": "Âm Sai Dẫn Lộ",
+      "author": "Mặc Vũ",
+      "status": "Đang ra",
+      "views": 12100,
+      "rating": "4.8",
+      "genres": ["Kinh Dị", "Trinh Thám"],
+      "short_description": "Mỗi đêm đều có người mất tích trên con đường cũ...",
+      "description": "Một con đường bỏ hoang dẫn đến nơi không ai còn sống để quay về.",
+      "quote": "“Có những con đường chỉ dành cho người chết.”",
+      "cover_image": "./assets/images/hero-bg.jpg",
+      "hero_image": "./assets/images/hero-bg.jpg",
+      "affiliate_book_link": "https://tiki.vn/",
+      "chapters": [
+        {
+          "id": "1",
+          "number": 1,
+          "title": "Con Đường Không Tên",
+          "date": "18/05/2024",
+          "next_chapter_shortlink": "https://example.com/am-sai-2",
+          "content": [
+            "Đêm đầu tiên trực ở trạm gác, ta đã nghe thấy tiếng bước chân ngoài cửa.",
+            "Nhưng camera an ninh lại không ghi được bất kỳ ai."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nguoi-gac-nghia-trang",
+      "title": "Người Gác Nghĩa Trang",
+      "author": "Hàn Sơn",
+      "status": "Hoàn thành",
+      "views": 9800,
+      "rating": "4.7",
+      "genres": ["Linh Dị"],
+      "short_description": "Công việc tưởng đơn giản lại kéo theo vô số bí mật kinh hoàng...",
+      "description": "Một người gác nghĩa trang phát hiện những ngôi mộ tự thay đổi vị trí sau nửa đêm.",
+      "quote": "“Người chết không bao giờ ngủ yên.”",
+      "cover_image": "./assets/images/hero-bg.jpg",
+      "hero_image": "./assets/images/hero-bg.jpg",
+      "affiliate_book_link": "https://shopee.vn/",
+      "chapters": [
+        {
+          "id": "1",
+          "number": 1,
+          "title": "Ca Trực Đầu Tiên",
+          "date": "17/05/2024",
+          "next_chapter_shortlink": "https://example.com/nghia-trang-2",
+          "content": [
+            "Nghĩa trang nằm sau ngọn đồi phía bắc.",
+            "Người quản lý cũ chỉ dặn ta một câu: sau mười hai giờ, đừng đếm mộ."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quy-mon-quan",
+      "title": "Quỷ Môn Quan",
+      "author": "Dạ Hành",
+      "status": "Đang ra",
+      "views": 11200,
+      "rating": "4.8",
+      "genres": ["Huyền Bí"],
+      "short_description": "Một cánh cửa xuất hiện giữa đêm, dẫn tới nơi không ai muốn tới...",
+      "description": "Cánh cửa quỷ môn mở ra sau mỗi kỳ trăng máu.",
+      "quote": "“Cánh cửa ấy không mở cho người sống.”",
+      "cover_image": "./assets/images/hero-bg.jpg",
+      "hero_image": "./assets/images/hero-bg.jpg",
+      "affiliate_book_link": "https://tiki.vn/",
+      "chapters": [
+        {
+          "id": "1",
+          "number": 1,
+          "title": "Cửa Mở Lúc Nửa Đêm",
+          "date": "16/05/2024",
+          "next_chapter_shortlink": "https://example.com/quy-mon-2",
+          "content": [
+            "Đêm ấy, trên bức tường trống xuất hiện một cánh cửa gỗ.",
+            "Sau cánh cửa là tiếng gọi tên ta."
+          ]
+        }
+      ]
+    }
+  ]
+}
