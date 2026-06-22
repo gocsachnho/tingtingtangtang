@@ -20,6 +20,13 @@ function formatDescription(text) {
     .join("");
 }
 
+function chapterLabel(chapter) {
+  const name = chapter.title && chapter.title.trim();
+  return name
+    ? `Chương ${chapter.chapter_order}: ${name}`
+    : `Chương ${chapter.chapter_order}`;
+}
+
 async function loadStory() {
   const { data: story, error: storyError } = await db
     .from("stories")
@@ -70,7 +77,7 @@ async function loadStory() {
 
   document.getElementById("chapterList").innerHTML = (chapters || []).map(chapter => `
     <a class="chapter-row" href="${chapterUrl(chapter)}">
-      <span>Chương ${chapter.chapter_order}: ${chapter.title}</span>
+      <span>${chapterLabel(chapter)}</span>
       <span>${chapter.shortlink ? "Qua link →" : "Đọc →"}</span>
     </a>
   `).join("");

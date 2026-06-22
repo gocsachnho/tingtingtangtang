@@ -83,6 +83,13 @@ async function loadAdminData() {
   renderChapters();
 }
 
+function chapterLabel(chapter) {
+  const name = chapter.title && chapter.title.trim();
+  return name
+    ? `Chương ${chapter.chapter_order}: ${name}`
+    : `Chương ${chapter.chapter_order}`;
+}
+
 function renderStorySelect() {
   const select = document.getElementById("storySelect");
 
@@ -123,10 +130,6 @@ function renderChapters() {
     .filter(c => c.story_id === currentStoryId)
     .sort((a, b) => Number(a.chapter_order) - Number(b.chapter_order));
 
-  const title = selectedStory
-    ? `Danh sách chương của: ${selectedStory.title}`
-    : "Danh sách chương";
-
   const box = document.getElementById("adminChapterList");
 
   if (!selectedStory) {
@@ -136,18 +139,18 @@ function renderChapters() {
 
   if (!filteredChapters.length) {
     box.innerHTML = `
-      <h3 style="color:#ffd369;margin-bottom:15px;">${title}</h3>
+      <h3 style="color:#ffd369;margin-bottom:15px;">Danh sách chương của: ${selectedStory.title}</h3>
       <p class="meta">Truyện này chưa có chương.</p>
     `;
     return;
   }
 
   box.innerHTML = `
-    <h3 style="color:#ffd369;margin-bottom:15px;">${title}</h3>
+    <h3 style="color:#ffd369;margin-bottom:15px;">Danh sách chương của: ${selectedStory.title}</h3>
     ${filteredChapters.map(chapter => `
       <div class="admin-item">
         <div>
-          <b>Chương ${chapter.chapter_order}: ${chapter.title}</b>
+          <b>${chapterLabel(chapter)}</b>
           <p class="meta">${chapter.shortlink ? "Có link rút gọn" : "Không có link rút gọn"}</p>
         </div>
         <div>
@@ -240,13 +243,25 @@ document.getElementById("chapterForm").addEventListener("submit", async function
   const fd = new FormData(form);
   const chapterId = fd.get("id");
   const selectedStoryId = fd.get("story_id");
+  const chapterOrder = Number(fd.get("chapter_order"));
 
   currentStoryId = selectedStoryId;
 
+  const duplicate = chapters.find(chapter =>
+    chapter.story_id === selectedStoryId &&
+    Number(chapter.chapter_order) === chapterOrder &&
+    String(chapter.id) !== String(chapterId || "")
+  );
+
+  if (duplicate) {
+    alert("Truyện này đã có chương số " + chapterOrder + ". Nếu muốn sửa thì bấm nút Sửa chương đó.");
+    return;
+  }
+
   const chapterData = {
     story_id: selectedStoryId,
-    chapter_order: Number(fd.get("chapter_order")),
-    title: fd.get("title"),
+    chapter_order: chapterOrder,
+    title: fd.get("title") || "",
     content: fd.get("content"),
     shortlink: fd.get("shortlink") || ""
   };

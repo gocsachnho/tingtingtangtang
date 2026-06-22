@@ -9,6 +9,13 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;");
 }
 
+function chapterLabel(chapter) {
+  const name = chapter.title && chapter.title.trim();
+  return name
+    ? `Chương ${chapter.chapter_order}: ${name}`
+    : `Chương ${chapter.chapter_order}`;
+}
+
 function splitParagraphs(text) {
   return String(text || "")
     .replace(/\r/g, "")
@@ -60,8 +67,8 @@ async function loadChapter() {
   const prevChapter = chapters[index - 1];
   const nextChapter = chapters[index + 1];
 
-  document.title = `${chapter.title} - ${story.title}`;
-  document.getElementById("chapterTitle").textContent = `Chương ${chapter.chapter_order}: ${chapter.title}`;
+  document.title = `${chapterLabel(chapter)} - ${story.title}`;
+  document.getElementById("chapterTitle").textContent = chapterLabel(chapter);
   document.getElementById("storyName").textContent = story.title;
   document.getElementById("backStory").href = `story.html?id=${story.id}`;
 
