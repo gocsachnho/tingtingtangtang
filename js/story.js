@@ -1,6 +1,11 @@
 const params = new URLSearchParams(location.search);
 const id = params.get("id");
 
+const CHAPTERS_PER_PAGE = 50;
+
+let allChapters = [];
+let currentPage = 1;
+
 function escapeHtml(text) {
   return String(text || "")
     .replace(/&/g, "&amp;")
@@ -22,9 +27,80 @@ function formatDescription(text) {
 
 function chapterLabel(chapter) {
   const name = chapter.title && chapter.title.trim();
+
   return name
     ? `Chương ${chapter.chapter_order}: ${name}`
     : `Chương ${chapter.chapter_order}`;
+}
+
+function renderChapterPage(page) {
+  currentPage = page;
+
+  const totalPages = Math.ceil(allChapters.length / CHAPTERS_PER_PAGE);
+  const start = (page - 1) * CHAPTERS_PER_PAGE;
+  const end = start + CHAPTERS_PER_PAGE;
+  const pageChapters = allChapters.slice(start, end);
+
+  document.getElementById("chapterList").innerHTML = pageChapters.map(chapter => `
+    <a class="chapter-row" href="${chapterUrl(chapter)}">
+      <span>${chapterLabel(chapter)}</span>
+      <span>${chapter.shortlink ? "Qua link →" : "Đọc →"}</span>
+    </a>
+  `).join("");
+
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const pagination = document.getElementById("pagination");
+
+  if (totalPages <= 1) {
+    pagination.innerHTML = "";
+    return;
+  }
+
+  let html = `<div class="pagination">`;
+
+  if (currentPage > 1) {
+    html += `<button onclick="renderChapterPage(${currentPage - 1})">← Trước</button>`;
+  }
+
+  for (let i = 1; i <= totalPages; i++) {
+    const showButton =
+      i === 1 ||
+      i === totalPages ||
+      Math.abs(i - currentPage) <= 2;
+
+    const showDotsBefore =
+      i === currentPage - 3 &&
+      currentPage > 4;
+
+    const showDotsAfter =
+      i === currentPage + 3 &&
+      currentPage < totalPages - 3;
+
+    if (showDotsBefore || showDotsAfter) {
+      html += `<span>...</span>`;
+    }
+
+    if (showButton) {
+      html += `
+        <button
+          class="${i === currentPage ? "active" : ""}"
+          onclick="renderChapterPage(${i})">
+          ${i}
+        </button>
+      `;
+    }
+  }
+
+  if (currentPage < totalPages) {
+    html += `<button onclick="renderChapterPage(${currentPage + 1})">Sau →</button>`;
+  }
+
+  html += `</div>`;
+
+  pagination.innerHTML = html;
 }
 
 async function loadStory() {
@@ -44,6 +120,8 @@ async function loadStory() {
     .select("*")
     .eq("story_id", story.id)
     .order("chapter_order", { ascending: true });
+
+  allChapters = chapters || [];
 
   document.title = story.title;
 
@@ -68,19 +146,14 @@ async function loadStory() {
       </div>
 
       ${
-        chapters && chapters.length
-          ? `<a class="chapter-nav" href="${chapterUrl(chapters[0])}">Đọc từ đầu</a>`
+        allChapters.length
+          ? `<a class="chapter-nav" href="${chapterUrl(allChapters[0])}">Đọc từ đầu</a>`
           : ""
       }
     </div>
   `;
 
-  document.getElementById("chapterList").innerHTML = (chapters || []).map(chapter => `
-    <a class="chapter-row" href="${chapterUrl(chapter)}">
-      <span>${chapterLabel(chapter)}</span>
-      <span>${chapter.shortlink ? "Qua link →" : "Đọc →"}</span>
-    </a>
-  `).join("");
+  renderChapterPage(1);
 }
 
 loadStory();
