@@ -1,41 +1,26 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chi tiết truyện</title>
-  <link rel="stylesheet" href="./assets/css/main.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-page="story">
-
+<body>
 <header class="header">
-  <a class="logo" href="./index.html">TingTing<br>TangTang</a>
-  <nav class="nav">
-    <a href="./index.html">Trang chủ</a>
-    <a href="./index.html#stories">Danh sách truyện</a>
-    <a href="./index.html#bookmarks">Bookmark</a>
-    <a href="./index.html#history">Lịch sử đọc</a>
+  <div class="logo">Ting Ting Tang Tang</div>
+  <nav>
+    <a href="index.html">Trang chủ</a>
   </nav>
 </header>
 
-<main class="page-wrap">
-  <section id="storyDetail" class="story-detail"></section>
-
-  <section class="panel">
-    <h2>Danh sách chương</h2>
-    <div id="chapterList"></div>
-  </section>
-
-  <section class="panel">
-    <h2>Bình luận truyện</h2>
-    <div id="commentBox"></div>
-  </section>
+<main class="detail">
+  <div id="storyDetail"></div>
+  <h2>Danh sách chương</h2>
+  <div id="chapterList"></div>
 </main>
 
-<footer class="footer simple-footer">
-  <p>© 2026 Ting Ting Tang Tang.</p>
-</footer>
-
-<script src="./assets/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/story.js"></script>
 </body>
 </html>

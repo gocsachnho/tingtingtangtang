@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Ting Ting Tang Tang</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">Ting Ting Tang Tang</div>
+  <nav>
+    <a href="index.html">Trang chủ</a>
+  </nav>
+</header>
+
+<main class="admin">
+  <h1>Bảng điều khiển Admin</h1>
+
+  <section class="admin-box" id="loginBox">
+    <h2>Đăng nhập Admin</h2>
+    <form id="loginForm">
+      <input name="email" type="email" placeholder="Email admin" required>
+      <input name="password" type="password" placeholder="Mật khẩu" required>
+      <button>Đăng nhập</button>
+    </form>
+  </section>
+
+  <section id="adminPanel" style="display:none;">
+    <button id="logoutBtn" class="delete-btn">Đăng xuất</button>
+
+    <section class="admin-box">
+      <h2>Tạo / Sửa truyện</h2>
+      <form id="storyForm">
+        <input type="hidden" name="id">
+        <input name="title" placeholder="Tên truyện" required>
+        <input name="author" placeholder="Tác giả">
+        <select name="genre">
+          <option value="Linh dị">Linh dị</option>
+          <option value="Ngôn tình">Ngôn tình</option>
+          <option value="Khác">Khác</option>
+        </select>
+        <input name="cover" placeholder="Link ảnh bìa hoặc upload bên dưới">
+        <input name="coverFile" type="file" accept="image/*">
+        <textarea name="description" placeholder="Mô tả truyện"></textarea>
+        <button>Lưu truyện</button>
+      </form>
+    </section>
+
+    <section class="admin-box">
+      <h2>Tạo / Sửa chương</h2>
+      <form id="chapterForm">
+        <input type="hidden" name="id">
+        <select name="story_id" id="storySelect"></select>
+        <input name="chapter_order" type="number" placeholder="Số chương, ví dụ 1" required>
+        <input name="title" placeholder="Tên chương" required>
+        <input name="shortlink" placeholder="Link rút gọn / affiliate, có thể bỏ trống">
+        <textarea name="content" placeholder="Nội dung chương" required></textarea>
+        <button>Lưu chương</button>
+      </form>
+    </section>
+
+    <section class="admin-box">
+      <h2>Danh sách truyện</h2>
+      <div id="adminStoryList"></div>
+    </section>
+
+    <section class="admin-box">
+      <h2>Danh sách chương</h2>
+      <div id="adminChapterList"></div>
+    </section>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

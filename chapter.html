@@ -3,28 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Đọc chương</title>
-  <link rel="stylesheet" href="./assets/css/main.css">
+  <title>Đọc chương - Ting Ting Tang Tang</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      background: #08111c;
+      color: #e9eef7;
+      font-family: Arial, sans-serif;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 5%;
+      background: #0d1a2a;
+      border-bottom: 1px solid #263950;
+    }
+
+    .logo {
+      font-family: "Great Vibes", cursive;
+      font-size: 36px;
+      color: #ffd369;
+    }
+
+    .menu {
+      display: flex;
+      gap: 34px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .reader {
+      max-width: 980px;
+      margin: 48px auto;
+      padding: 0 24px;
+    }
+
+    .chapter-nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 26px 0;
+    }
+
+    .chapter-nav a {
+      background: #ffd369;
+      color: #111;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .chapter-nav a.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .chapter-box {
+      background: #111f31;
+      border: 1px solid #263950;
+      border-radius: 18px;
+      padding: 46px 58px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #ffd369;
+    }
+
+    .story-title {
+      text-align: center;
+      color: #9fb3ff;
+      margin-bottom: 42px;
+      font-weight: 700;
+    }
+
+    .chapter-content {
+      font-family: "Noto Serif", Georgia, serif;
+      font-size: 20px;
+      line-height: 2.1;
+      color: #f1f4fa;
+    }
+
+    .chapter-content p {
+      margin: 0 0 24px;
+    }
+  </style>
 </head>
-<body data-page="chapter">
+
+<body>
 
 <header class="header">
-  <a class="logo" href="./index.html">TingTing<br>TangTang</a>
-  <nav class="nav">
+  <a href="./index.html" class="logo">Ting Ting Tang Tang</a>
+  <nav class="menu">
     <a href="./index.html">Trang chủ</a>
-    <a id="backToStory" href="#">Chi tiết truyện</a>
+    <a id="backStory" href="#">Chi tiết truyện</a>
   </nav>
 </header>
 
-<main class="reader-wrap">
-  <section id="chapterContent" class="reader"></section>
+<main class="reader">
+  <div class="chapter-nav">
+    <a id="prevTop" href="#">← Chương trước</a>
+    <a id="nextTop" href="#">Chương sau →</a>
+  </div>
 
-  <section class="panel">
-    <h2>Bình luận chương</h2>
-    <div id="commentBox"></div>
+  <section class="chapter-box">
+    <h1 id="chapterTitle">Đang tải chương...</h1>
+    <div class="story-title" id="storyName"></div>
+    <article class="chapter-content" id="chapterContent"></article>
   </section>
+
+  <div class="chapter-nav">
+    <a id="prevBottom" href="#">← Chương trước</a>
+    <a id="nextBottom" href="#">Chương sau →</a>
+  </div>
 </main>
 
-<script src="./assets/js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/chapter.js"></script>
 </body>
 </html>
