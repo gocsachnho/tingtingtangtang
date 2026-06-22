@@ -1,62 +1,101 @@
-const stories = getStories();
+let stories = [];
+let chapters = [];
 
 function storyCard(story) {
   return `
     <a class="card" href="story.html?id=${story.id}">
-      <div class="cover">${story.title}</div>
+      <div class="cover">
+        ${
+          story.cover
+            ? `<img src="${story.cover}" style="width:100%;height:100%;object-fit:cover;">`
+            : story.title
+        }
+      </div>
+
       <div class="info">
         <h3>${story.title}</h3>
         <p class="meta">
-          Tác giả: ${story.author}<br>
-          Thể loại: ${categoryName(story.category)}<br>
-          Lượt xem: ${story.views.toLocaleString("vi-VN")}
+          Tác giả: ${story.author || "Đang cập nhật"}<br>
+          Thể loại: ${story.genre || "Khác"}<br>
+          Lượt xem: ${(story.views || 0).toLocaleString("vi-VN")}
         </p>
       </div>
     </a>
   `;
 }
 
-function render(id, list) {
-  document.getElementById(id).innerHTML = list.slice(0, 4).map(storyCard).join("");
+function renderGrid(id, list) {
+  const box = document.getElementById(id);
+
+  if (!list.length) {
+    box.innerHTML = `<p class="meta">Chưa có truyện.</p>`;
+    return;
+  }
+
+  box.innerHTML = list.slice(0, 4).map(storyCard).join("");
 }
 
-const newest = [...stories].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-const hottest = [...stories].sort((a, b) => b.views - a.views);
+function renderLatestChapters() {
+  const latest = [...chapters]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 12);
 
-render("newStories", newest);
-render("hotStories", hottest);
-render("horrorStories", hottest.filter(s => s.category === "linh-di"));
-render("romanceStories", hottest.filter(s => s.category === "ngon-tinh"));
+  document.getElementById("latestChapters").innerHTML = latest.map(chapter => {
+    const story = stories.find(s => s.id === chapter.story_id);
+    if (!story) return "";
 
-const latest = [];
+    return `
+      <li>
+        <a href="${chapterUrl(chapter)}">
+          <b>${story.title}</b><br>
+          Chương ${chapter.chapter_order}: ${chapter.title}
+        </a>
+      </li>
+    `;
+  }).join("");
+}
 
-stories.forEach(story => {
-  story.chapters.forEach((chapter, index) => {
-    latest.push({ story, chapter, index });
-  });
-});
+async function loadHome() {
+  const storyResult = await db
+    .from("stories")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-document.getElementById("latestChapters").innerHTML = latest.reverse().slice(0, 12).map(item => `
-  <li>
-    <a href="chapter.html?id=${item.story.id}&chapter=${item.index}">
-      <b>${item.story.title}</b><br>
-      ${item.chapter.title}
-    </a>
-  </li>
-`).join("");
+  const chapterResult = await db
+    .from("chapters")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  stories = storyResult.data || [];
+  chapters = chapterResult.data || [];
+
+  const newest = [...stories].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const hot = [...stories].sort((a, b) => (b.views || 0) - (a.views || 0));
+  const horror = hot.filter(s => (s.genre || "").toLowerCase().includes("linh"));
+  const romance = hot.filter(s => (s.genre || "").toLowerCase().includes("ngôn"));
+
+  renderGrid("newStories", newest);
+  renderGrid("hotStories", hot);
+  renderGrid("horrorStories", horror);
+  renderGrid("romanceStories", romance);
+  renderLatestChapters();
+}
 
 document.getElementById("searchInput").addEventListener("input", function () {
   const q = this.value.toLowerCase().trim();
 
   if (!q) {
-    render("newStories", newest);
+    loadHome();
     return;
   }
 
-  const result = stories.filter(s =>
-    s.title.toLowerCase().includes(q) ||
-    s.author.toLowerCase().includes(q)
+  const result = stories.filter(story =>
+    story.title.toLowerCase().includes(q) ||
+    (story.author || "").toLowerCase().includes(q) ||
+    (story.genre || "").toLowerCase().includes(q)
   );
 
-  render("newStories", result);
+  renderGrid("newStories", result);
 });
+
+loadHome();

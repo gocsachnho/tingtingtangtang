@@ -9,346 +9,24 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      --bg-main: #08111c;
-      --bg-header: #0d1a2a;
-      --bg-card: #111f31;
-      --text-main: #f5f5f5;
-      --text-muted: #aebbd0;
-      --line: #263950;
-      --gold: #ffd369;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background: var(--bg-main);
-      color: var(--text-main);
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .header {
-      display: grid;
-      grid-template-columns: 300px 1fr 230px;
-      align-items: center;
-      gap: 24px;
-      padding: 18px 5%;
-      background: var(--bg-header);
-      border-bottom: 1px solid var(--line);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo {
-      font-family: "Great Vibes", cursive;
-      font-size: 36px;
-      line-height: 1;
-      color: var(--gold);
-      white-space: nowrap;
-    }
-
-    .menu {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 34px;
-      flex-wrap: nowrap;
-    }
-
-    .menu a {
-      font-size: 20px;
-      font-weight: 700;
-      color: #e6f0ff;
-      white-space: nowrap;
-    }
-
-    .menu a:hover {
-      color: var(--gold);
-    }
-
-    .search-box {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .search-box input {
-      width: 220px;
-      padding: 11px 15px;
-      border-radius: 24px;
-      border: 1px solid #40556f;
-      background: #0b1625;
-      color: white;
-      outline: none;
-    }
-
-    .hero {
-      padding: 72px 5%;
-      background: linear-gradient(135deg, #11233a, #08111c);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .hero h1 {
-      font-size: 58px;
-      color: var(--gold);
-      margin-bottom: 15px;
-    }
-
-    .hero p {
-      color: #e6f0ff;
-      font-size: 19px;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 330px;
-      gap: 28px;
-      padding: 36px 5% 60px;
-    }
-
-    .section {
-      margin-bottom: 42px;
-    }
-
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-    }
-
-    .section-head h2 {
-      color: var(--gold);
-      font-size: 30px;
-    }
-
-    .section-head span {
-      color: var(--text-muted);
-      font-size: 14px;
-    }
-
-    .stories-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 20px;
-    }
-
-    .story-card {
-      background: var(--bg-card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      overflow: hidden;
-      transition: 0.25s;
-    }
-
-    .story-card:hover {
-      transform: translateY(-6px);
-      border-color: var(--gold);
-    }
-
-    .story-cover-wrapper {
-      height: 230px;
-      background: linear-gradient(135deg, #1e3a5f, #241a10);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-      text-align: center;
-    }
-
-    .story-cover-title {
-      color: var(--gold);
-      font-size: 24px;
-      font-weight: 700;
-      line-height: 1.35;
-    }
-
-    .story-info {
-      padding: 15px;
-    }
-
-    .story-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: white;
-      line-height: 1.45;
-      min-height: 52px;
-      margin-bottom: 10px;
-    }
-
-    .story-meta {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-
-    .story-genre {
-      background: rgba(255, 211, 105, 0.14);
-      color: var(--gold);
-      padding: 4px 9px;
-      border-radius: 999px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .chapter-count {
-      color: #7ee0a1;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .sidebar {
-      position: sticky;
-      top: 100px;
-      align-self: start;
-      background: var(--bg-card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 20px;
-    }
-
-    .sidebar h3 {
-      color: var(--gold);
-      font-size: 22px;
-      margin-bottom: 15px;
-    }
-
-    .latest-list {
-      list-style: none;
-    }
-
-    .latest-list li {
-      border-bottom: 1px solid var(--line);
-      padding: 12px 0;
-    }
-
-    .latest-list a {
-      display: block;
-      color: #d8e6ff;
-      line-height: 1.5;
-    }
-
-    .latest-list a:hover {
-      color: var(--gold);
-    }
-
-    .latest-title {
-      font-weight: 700;
-      display: block;
-    }
-
-    .latest-chapter {
-      color: var(--text-muted);
-      font-size: 13px;
-      display: block;
-    }
-
-    footer {
-      border-top: 1px solid var(--line);
-      padding: 28px 5%;
-      text-align: center;
-      color: var(--text-muted);
-    }
-
-    @media (max-width: 1200px) {
-      .header {
-        grid-template-columns: 270px 1fr 210px;
-      }
-
-      .logo {
-        font-size: 32px;
-      }
-
-      .menu {
-        gap: 22px;
-      }
-
-      .menu a {
-        font-size: 17px;
-      }
-    }
-
-    @media (max-width: 980px) {
-      .header {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .logo {
-        text-align: center;
-      }
-
-      .menu {
-        flex-wrap: wrap;
-      }
-
-      .search-box {
-        justify-content: center;
-      }
-
-      .search-box input {
-        width: 100%;
-        max-width: 420px;
-      }
-
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        position: static;
-      }
-
-      .stories-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 580px) {
-      .hero h1 {
-        font-size: 38px;
-      }
-
-      .stories-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .menu a {
-        font-size: 15px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
 <header class="header">
-  <a href="./index.html" class="logo">Ting Ting Tang Tang</a>
+  <a href="index.html" class="logo">Ting Ting Tang Tang</a>
 
   <nav class="menu">
-    <a href="./index.html">Trang chủ</a>
+    <a href="index.html">Trang chủ</a>
     <a href="#gioithieu">Giới thiệu</a>
     <a href="#theloai">Thể loại</a>
     <a href="https://youtube.com" target="_blank">Kênh Youtube</a>
     <a href="#lienhe">Liên hệ</a>
   </nav>
 
-  <div class="search-box">
-    <input id="searchInput" type="search" placeholder="Tìm truyện...">
+  <div class="search-wrap">
+    <input id="searchInput" placeholder="Tìm truyện...">
   </div>
 </header>
 
@@ -359,42 +37,30 @@
 
 <div class="layout">
   <main>
-    <section class="section">
-      <div class="section-head">
-        <h2>Truyện Mới</h2>
-        <span>4 truyện mới cập nhật</span>
-      </div>
-      <div class="stories-grid" id="newStories"></div>
+    <section>
+      <h2>Truyện Mới</h2>
+      <div class="grid" id="newStories"></div>
     </section>
 
-    <section class="section">
-      <div class="section-head">
-        <h2>Truyện Đề Cử</h2>
-        <span>4 truyện nổi bật</span>
-      </div>
-      <div class="stories-grid" id="recommendedStories"></div>
+    <section>
+      <h2>Truyện Đề Cử</h2>
+      <div class="grid" id="hotStories"></div>
     </section>
 
-    <section class="section" id="theloai">
-      <div class="section-head">
-        <h2>Truyện Linh Dị</h2>
-        <span>Top truyện linh dị</span>
-      </div>
-      <div class="stories-grid" id="horrorStories"></div>
+    <section id="theloai">
+      <h2>Truyện Linh Dị</h2>
+      <div class="grid" id="horrorStories"></div>
     </section>
 
-    <section class="section">
-      <div class="section-head">
-        <h2>Truyện Ngôn Tình</h2>
-        <span>Top truyện ngôn tình</span>
-      </div>
-      <div class="stories-grid" id="romanceStories"></div>
+    <section>
+      <h2>Truyện Ngôn Tình</h2>
+      <div class="grid" id="romanceStories"></div>
     </section>
   </main>
 
-  <aside class="sidebar">
+  <aside>
     <h3>Chương mới cập nhật</h3>
-    <ul class="latest-list" id="latestChapters"></ul>
+    <ul id="latestChapters"></ul>
   </aside>
 </div>
 
@@ -402,207 +68,8 @@
   © Ting Ting Tang Tang
 </footer>
 
-<script>
-  const FALLBACK_STORIES = [
-    {
-      id: "dan-gian-di-van-luc",
-      title: "Dân Gian Dị Văn Lục",
-      author: "La Tiểu Kỳ",
-      genre: "Linh dị",
-      views: 98210,
-      createdAt: "2026-06-22",
-      chapters: [
-        { title: "Chương 1: Đêm Mưa Gõ Cửa" },
-        { title: "Chương 2: Bóng Người Sau Miếu" }
-      ]
-    },
-    {
-      id: "am-hon-tro-ve",
-      title: "Âm Hồn Trở Về",
-      author: "Mộc Hạ",
-      genre: "Linh dị",
-      views: 76100,
-      createdAt: "2026-06-21",
-      chapters: [{ title: "Chương 1: Đám Tang Không Khóc" }]
-    },
-    {
-      id: "co-dau-quy",
-      title: "Cô Dâu Quỷ",
-      author: "Hàn Vũ",
-      genre: "Linh dị",
-      views: 68900,
-      createdAt: "2026-06-20",
-      chapters: [{ title: "Chương 1: Kiệu Hoa Trong Sương" }]
-    },
-    {
-      id: "nha-co-ben-song",
-      title: "Nhà Cổ Bên Sông",
-      author: "Bạch Miên",
-      genre: "Linh dị",
-      views: 61200,
-      createdAt: "2026-06-19",
-      chapters: [{ title: "Chương 1: Ánh Đèn Nửa Đêm" }]
-    },
-    {
-      id: "yeu-em-mua-ha",
-      title: "Yêu Em Mùa Hạ",
-      author: "Lam Chi",
-      genre: "Ngôn tình",
-      views: 89500,
-      createdAt: "2026-06-18",
-      chapters: [{ title: "Chương 1: Gặp Lại" }]
-    },
-    {
-      id: "hon-uoc-mua-dong",
-      title: "Hôn Ước Mùa Đông",
-      author: "An Nhiên",
-      genre: "Ngôn tình",
-      views: 83400,
-      createdAt: "2026-06-17",
-      chapters: [{ title: "Chương 1: Tờ Giấy Hôn Ước" }]
-    },
-    {
-      id: "sau-con-mua",
-      title: "Sau Cơn Mưa",
-      author: "Tịch Lam",
-      genre: "Ngôn tình",
-      views: 72100,
-      createdAt: "2026-06-16",
-      chapters: [{ title: "Chương 1: Mưa Rơi" }]
-    },
-    {
-      id: "gui-anh-ngay-cu",
-      title: "Gửi Anh Ngày Cũ",
-      author: "Diệp Trà",
-      genre: "Ngôn tình",
-      views: 69800,
-      createdAt: "2026-06-15",
-      chapters: [{ title: "Chương 1: Lá Thư Đầu Tiên" }]
-    }
-  ];
-
-  let allStories = [];
-
-  function normalizeText(text) {
-    return String(text || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  function getGenre(story) {
-    return story.genre || story.category || story.theLoai || "Khác";
-  }
-
-  function getViews(story) {
-    return Number(story.views || story.view || story.luotXem || 0);
-  }
-
-  function getCreated(story) {
-    return story.createdAt || story.updatedAt || story.date || "";
-  }
-
-  function storyCard(story) {
-    const totalChapters = story.chapters ? story.chapters.length : 0;
-    const genre = getGenre(story);
-
-    return `
-      <a href="./story.html?id=${story.id}" class="story-card">
-        <div class="story-cover-wrapper">
-          <div class="story-cover-title">${story.title}</div>
-        </div>
-        <div class="story-info">
-          <div class="story-title">${story.title}</div>
-          <div class="story-meta">
-            <span class="story-genre">${genre}</span>
-            <span class="chapter-count">${totalChapters} chương</span>
-          </div>
-        </div>
-      </a>
-    `;
-  }
-
-  function renderGrid(id, list) {
-    document.getElementById(id).innerHTML = list.slice(0, 4).map(storyCard).join("");
-  }
-
-  function renderLatestChapters(stories) {
-    const latest = [];
-
-    stories.forEach(story => {
-      if (!story.chapters) return;
-
-      story.chapters.forEach((chapter, index) => {
-        latest.push({ story, chapter, index });
-      });
-    });
-
-    document.getElementById("latestChapters").innerHTML = latest.reverse().slice(0, 12).map(item => {
-      const chapterTitle = item.chapter.title || `Chương ${item.index + 1}`;
-
-      return `
-        <li>
-          <a href="./chapter.html?id=${item.story.id}&chapter=${item.index}">
-            <span class="latest-title">${item.story.title}</span>
-            <span class="latest-chapter">${chapterTitle}</span>
-          </a>
-        </li>
-      `;
-    }).join("");
-  }
-
-  function renderHome(stories) {
-    const newest = [...stories].sort((a, b) => String(getCreated(b)).localeCompare(String(getCreated(a))));
-    const recommended = [...stories].sort((a, b) => getViews(b) - getViews(a));
-
-    const horror = recommended.filter(story => {
-      const genre = normalizeText(getGenre(story));
-      return genre.includes("linh") || genre.includes("di") || genre.includes("kinh");
-    });
-
-    const romance = recommended.filter(story => {
-      const genre = normalizeText(getGenre(story));
-      return genre.includes("ngon") || genre.includes("tinh");
-    });
-
-    renderGrid("newStories", newest);
-    renderGrid("recommendedStories", recommended);
-    renderGrid("horrorStories", horror);
-    renderGrid("romanceStories", romance);
-    renderLatestChapters(stories);
-  }
-
-  document.addEventListener("DOMContentLoaded", async () => {
-    try {
-      const response = await fetch("./data/stories.json?t=" + new Date().getTime());
-      if (!response.ok) throw new Error("Không tải được stories.json");
-
-      const data = await response.json();
-      allStories = Array.isArray(data) && data.length ? data : FALLBACK_STORIES;
-    } catch (error) {
-      allStories = FALLBACK_STORIES;
-    }
-
-    renderHome(allStories);
-
-    document.getElementById("searchInput").addEventListener("input", function () {
-      const q = normalizeText(this.value.trim());
-
-      if (!q) {
-        renderHome(allStories);
-        return;
-      }
-
-      const result = allStories.filter(story => {
-        return normalizeText(story.title).includes(q) ||
-               normalizeText(story.author).includes(q) ||
-               normalizeText(getGenre(story)).includes(q);
-      });
-
-      renderGrid("newStories", result);
-    });
-  });
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
