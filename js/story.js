@@ -8,10 +8,11 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;");
 }
 
-function formatParagraphs(text) {
+function formatDescription(text) {
   return String(text || "")
     .replace(/\r/g, "")
     .replace(/\\n/g, "\n")
+    .replace(/([.!?…])\s+/g, "$1\n\n")
     .split(/\n+/)
     .map(line => line.trim())
     .filter(Boolean)
@@ -41,15 +42,22 @@ async function loadStory() {
 
   document.getElementById("storyDetail").innerHTML = `
     <div class="story-box">
-      ${story.cover ? `<img src="${story.cover}" style="max-width:320px;border-radius:12px;margin-bottom:18px;">` : ""}
+      ${story.cover ? `
+        <img 
+          src="${story.cover}" 
+          style="max-width:320px;width:100%;border-radius:12px;margin-bottom:28px;display:block;"
+        >
+      ` : ""}
+
       <h1>${story.title}</h1>
+
       <p class="meta">
         Tác giả: ${story.author || ""} |
         Thể loại: ${story.genre || ""}
       </p>
 
-      <div class="story-description">
-        ${formatParagraphs(story.description || "")}
+      <div class="story-description" style="font-size:19px;line-height:1.9;margin-top:24px;">
+        ${formatDescription(story.description || "")}
       </div>
 
       ${

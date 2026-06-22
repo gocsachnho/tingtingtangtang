@@ -3,18 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <title>Chi tiết truyện</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
+
 <header class="header">
-  <div class="logo">Ting Ting Tang Tang</div>
-  <nav>
+  <a href="index.html" class="logo">Ting Ting Tang Tang</a>
+
+  <nav class="menu">
     <a href="index.html">Trang chủ</a>
+    <a href="index.html#gioithieu">Giới thiệu</a>
+    <a href="index.html#theloai">Thể loại</a>
+    <a href="https://youtube.com" target="_blank">Kênh Youtube</a>
+    <a href="index.html#lienhe">Liên hệ</a>
   </nav>
+
+  <div class="search-wrap">
+    <input placeholder="Tìm truyện...">
+  </div>
 </header>
 
 <main class="detail">
   <div id="storyDetail"></div>
+
   <h2>Danh sách chương</h2>
   <div id="chapterList"></div>
 </main>
@@ -22,5 +39,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/story.js"></script>
+
 </body>
 </html>
