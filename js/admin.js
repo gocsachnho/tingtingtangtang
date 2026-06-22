@@ -67,6 +67,7 @@ async function loadAdminData() {
   const chapterResult = await db
     .from("chapters")
     .select("*")
+    .order("story_id", { ascending: true })
     .order("chapter_order", { ascending: true });
 
   stories = storyResult.data || [];
@@ -84,18 +85,22 @@ function renderStorySelect() {
 }
 
 function renderStories() {
-  document.getElementById("adminStoryList").innerHTML = stories.map(story => `
-    <div class="admin-item">
-      <div>
-        <b>${story.title}</b>
-        <p class="meta">${story.author || ""} | ${story.genre || ""}</p>
+  document.getElementById("adminStoryList").innerHTML = stories.map(story => {
+    const count = chapters.filter(c => c.story_id === story.id).length;
+
+    return `
+      <div class="admin-item">
+        <div>
+          <b>${story.title}</b>
+          <p class="meta">${story.author || ""} | ${story.genre || ""} | ${count} chương</p>
+        </div>
+        <div>
+          <button type="button" onclick="editStory('${story.id}')">Sửa</button>
+          <button type="button" class="delete-btn" onclick="deleteStory('${story.id}')">Xóa</button>
+        </div>
       </div>
-      <div>
-        <button onclick="editStory('${story.id}')">Sửa</button>
-        <button class="delete-btn" onclick="deleteStory('${story.id}')">Xóa</button>
-      </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
 function renderChapters() {
@@ -110,8 +115,8 @@ function renderChapters() {
           <p class="meta">${chapter.shortlink ? "Có link rút gọn" : "Không có link rút gọn"}</p>
         </div>
         <div>
-          <button onclick="editChapter(${chapter.id})">Sửa</button>
-          <button class="delete-btn" onclick="deleteChapter(${chapter.id})">Xóa</button>
+          <button type="button" onclick="editChapter(${chapter.id})">Sửa</button>
+          <button type="button" class="delete-btn" onclick="deleteChapter(${chapter.id})">Xóa</button>
         </div>
       </div>
     `;
@@ -147,6 +152,7 @@ document.getElementById("storyForm").addEventListener("submit", async function (
   }
 
   this.reset();
+  this.elements.id.value = "";
   await loadAdminData();
   alert("Đã lưu truyện.");
 });
@@ -155,12 +161,12 @@ function editStory(id) {
   const story = stories.find(s => s.id === id);
   const form = document.getElementById("storyForm");
 
-  form.id.value = story.id;
-  form.title.value = story.title || "";
-  form.author.value = story.author || "";
-  form.genre.value = story.genre || "Khác";
-  form.cover.value = story.cover || "";
-  form.description.value = story.description || "";
+  form.elements.id.value = story.id;
+  form.elements.title.value = story.title || "";
+  form.elements.author.value = story.author || "";
+  form.elements.genre.value = story.genre || "Khác";
+  form.elements.cover.value = story.cover || "";
+  form.elements.description.value = story.description || "";
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -192,7 +198,7 @@ document.getElementById("chapterForm").addEventListener("submit", async function
     chapter_order: Number(fd.get("chapter_order")),
     title: fd.get("title"),
     content: fd.get("content"),
-    shortlink: fd.get("shortlink")
+    shortlink: fd.get("shortlink") || ""
   };
 
   let error;
@@ -207,7 +213,7 @@ document.getElementById("chapterForm").addEventListener("submit", async function
   } else {
     const result = await db
       .from("chapters")
-      .insert(chapterData);
+      .insert([chapterData]);
 
     error = result.error;
   }
@@ -218,6 +224,7 @@ document.getElementById("chapterForm").addEventListener("submit", async function
   }
 
   this.reset();
+  this.elements.id.value = "";
   await loadAdminData();
   alert("Đã lưu chương.");
 });
@@ -226,12 +233,12 @@ function editChapter(id) {
   const chapter = chapters.find(c => c.id === id);
   const form = document.getElementById("chapterForm");
 
-  form.id.value = chapter.id;
-  form.story_id.value = chapter.story_id;
-  form.chapter_order.value = chapter.chapter_order;
-  form.title.value = chapter.title || "";
-  form.content.value = chapter.content || "";
-  form.shortlink.value = chapter.shortlink || "";
+  form.elements.id.value = chapter.id;
+  form.elements.story_id.value = chapter.story_id;
+  form.elements.chapter_order.value = chapter.chapter_order;
+  form.elements.title.value = chapter.title || "";
+  form.elements.content.value = chapter.content || "";
+  form.elements.shortlink.value = chapter.shortlink || "";
 
   window.scrollTo({ top: 0, behavior: "smooth" });
 }

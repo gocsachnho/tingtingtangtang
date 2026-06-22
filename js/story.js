@@ -1,6 +1,24 @@
 const params = new URLSearchParams(location.search);
 const id = params.get("id");
 
+function escapeHtml(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function formatParagraphs(text) {
+  return String(text || "")
+    .replace(/\r/g, "")
+    .replace(/\\n/g, "\n")
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => `<p>${escapeHtml(line)}</p>`)
+    .join("");
+}
+
 async function loadStory() {
   const { data: story, error: storyError } = await db
     .from("stories")
@@ -23,13 +41,17 @@ async function loadStory() {
 
   document.getElementById("storyDetail").innerHTML = `
     <div class="story-box">
-      ${story.cover ? `<img src="${story.cover}" style="max-width:220px;border-radius:12px;margin-bottom:18px;">` : ""}
+      ${story.cover ? `<img src="${story.cover}" style="max-width:320px;border-radius:12px;margin-bottom:18px;">` : ""}
       <h1>${story.title}</h1>
       <p class="meta">
         Tác giả: ${story.author || ""} |
         Thể loại: ${story.genre || ""}
       </p>
-      <p>${story.description || ""}</p>
+
+      <div class="story-description">
+        ${formatParagraphs(story.description || "")}
+      </div>
+
       ${
         chapters && chapters.length
           ? `<a class="chapter-nav" href="${chapterUrl(chapters[0])}">Đọc từ đầu</a>`
