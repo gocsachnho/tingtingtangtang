@@ -97,13 +97,17 @@ function renderHeroSlider() {
     <div class="hero-track">
       ${slides.map(item => `
         <a class="hero-slide" href="${chapterUrl(item.chapter)}">
-          ${
-            item.story.cover
-              ? `<img src="${item.story.cover}" alt="${item.story.title}">`
-              : ""
-          }
 
-          <div class="hero-slide-info">
+  ${
+    item.story.cover
+      ? `
+      <img class="hero-bg" src="${item.story.cover}" alt="${item.story.title}">
+      <img class="hero-poster" src="${item.story.cover}" alt="${item.story.title}">
+      `
+      : ""
+  }
+
+  <div class="hero-slide-info">
             <span>Vừa cập nhật</span>
             <h2>${item.story.title}</h2>
             <p>${chapterLabel(item.chapter)}</p>
