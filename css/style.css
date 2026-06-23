@@ -480,3 +480,154 @@ button {
     font-size: 14px;
   }
 }
+/* ================= HERO SLIDER ================= */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  gap: 34px;
+  align-items: center;
+  min-height: 290px;
+}
+
+.hero-left h1 {
+  font-size: 50px;
+  margin: 0 0 12px;
+  color: #ffd369;
+}
+
+.hero-slider {
+  position: relative;
+  width: 100%;
+  height: 230px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #263950;
+  background: #111f31;
+}
+
+.hero-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.55s ease;
+}
+
+.hero-slide {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
+  color: #fff;
+  display: block;
+}
+
+.hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(8,17,28,.95),
+    rgba(8,17,28,.55),
+    rgba(8,17,28,.15)
+  );
+}
+
+.hero-slide-info {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 2;
+  max-width: 72%;
+}
+
+.hero-slide-info span {
+  display: inline-block;
+  color: #111;
+  background: #ffd369;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.hero-slide-info h2 {
+  border: none;
+  padding: 0;
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 26px;
+  line-height: 1.25;
+}
+
+.hero-slide-info p {
+  margin: 0;
+  color: #d8e6ff;
+  font-size: 16px;
+}
+
+.hero-dots {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  display: flex;
+  gap: 7px;
+  z-index: 5;
+}
+
+.hero-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #7b8ba4;
+}
+
+.hero-dots span.active {
+  background: #ffd369;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 28px 5%;
+  }
+
+  .hero-left h1 {
+    font-size: 34px;
+  }
+
+  .hero-slider {
+    height: 210px;
+  }
+
+  .hero-slide-info h2 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 520px) {
+  .hero-slider {
+    height: 190px;
+  }
+
+  .hero-slide-info {
+    left: 16px;
+    bottom: 18px;
+    max-width: 82%;
+  }
+
+  .hero-slide-info h2 {
+    font-size: 20px;
+  }
+
+  .hero-slide-info p {
+    font-size: 14px;
+  }
+}
