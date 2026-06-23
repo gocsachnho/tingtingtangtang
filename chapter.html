@@ -7,14 +7,17 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Serif:wght@400;500;600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
 
   <style>
     body {
       margin: 0;
-      background: #08111c;
-      color: #e9eef7;
-      font-family: "Inter", Arial, sans-serif;
+      background: #f9f2f8 !important;
+      color: #4f4150 !important;
+      font-family: "Nunito", Arial, sans-serif;
+      font-weight: 600;
     }
 
     a {
@@ -28,14 +31,15 @@
       align-items: center;
       gap: 20px;
       padding: 16px 5%;
-      background: #0d1a2a;
-      border-bottom: 1px solid #263950;
+      background: #fff7fc !important;
+      border-bottom: 1px solid #ead5e4 !important;
+      box-shadow: 0 6px 22px rgba(185,111,163,.08);
     }
 
     .logo {
       font-family: "Great Vibes", cursive;
       font-size: 34px;
-      color: #ffd369;
+      color: #c77fb1 !important;
       white-space: nowrap;
       line-height: 1;
     }
@@ -46,12 +50,18 @@
       gap: 28px;
       font-size: 18px;
       font-weight: 800;
+      color: #6b5268;
+    }
+
+    .menu a {
+      color: #6b5268 !important;
     }
 
     .reader {
-      max-width: 930px;
+      max-width: 960px;
       margin: 34px auto;
       padding: 0 18px;
+      background: transparent !important;
     }
 
     .chapter-nav {
@@ -62,12 +72,13 @@
     }
 
     .chapter-nav a {
-      background: #ffd369;
-      color: #111;
+      background: #d88ac0 !important;
+      color: #fff !important;
       padding: 11px 20px;
       border-radius: 999px;
       font-weight: 800;
       font-size: 15px;
+      box-shadow: 0 8px 22px rgba(216,138,192,.22);
     }
 
     .chapter-nav a.disabled {
@@ -76,23 +87,26 @@
     }
 
     .chapter-box {
-      background: #111f31;
-      border: 1px solid #263950;
+      background: #ffffff !important;
+      border: 1px solid #ead5e4 !important;
       border-radius: 18px;
       padding: 38px 46px;
+      box-shadow: 0 10px 28px rgba(185,111,163,.12);
     }
 
     h1 {
+      font-family: "Playfair Display", serif;
       text-align: center;
-      color: #ffd369;
+      color: #b96fa3 !important;
       font-size: 34px;
       line-height: 1.35;
       margin: 0 0 16px;
+      font-weight: 800;
     }
 
     .story-title {
       text-align: center;
-      color: #9fb3ff;
+      color: #8e6b91 !important;
       margin-bottom: 36px;
       font-weight: 800;
       font-size: 17px;
@@ -100,13 +114,19 @@
 
     .chapter-content {
       font-family: "Noto Serif", Georgia, serif;
-      font-size: 20px;
+      font-size: 21px;
       line-height: 2;
-      color: #f1f4fa;
+      color: #4f4150 !important;
+      word-break: normal !important;
+      overflow-wrap: normal !important;
+      white-space: normal !important;
     }
 
     .chapter-content p {
       margin: 0 0 22px;
+      color: #4f4150 !important;
+      word-break: normal !important;
+      overflow-wrap: normal !important;
     }
 
     @media (max-width: 760px) {
@@ -149,7 +169,7 @@
 
       .chapter-content {
         font-size: 18px;
-        line-height: 1.85;
+        line-height: 1.9;
       }
 
       .chapter-content p {
