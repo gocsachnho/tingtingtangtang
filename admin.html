@@ -3,21 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin - Ting Ting Tang Tang</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .admin-layout{
+      max-width:1200px;
+      margin:30px auto;
+      padding:0 18px;
+      display:grid;
+      grid-template-columns:220px 1fr;
+      gap:24px;
+    }
+
+    .admin-sidebar{
+      background:#111f31;
+      border:1px solid #263950;
+      border-radius:16px;
+      padding:16px;
+      height:max-content;
+      position:sticky;
+      top:20px;
+    }
+
+    .admin-sidebar h3{
+      color:#ffd369;
+      margin:0 0 14px;
+      font-size:20px;
+    }
+
+    .admin-tab{
+      width:100%;
+      display:block;
+      margin-bottom:10px;
+      padding:12px 14px;
+      border-radius:12px;
+      background:#08111c;
+      color:#d8e6ff;
+      border:1px solid #263950;
+      text-align:left;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    .admin-tab.active{
+      background:#ffd369;
+      color:#111;
+    }
+
+    .admin-content{
+      min-width:0;
+    }
+
+    .admin-page{
+      display:none;
+    }
+
+    .admin-page.active{
+      display:block;
+    }
+
+    .admin-top{
+      max-width:1200px;
+      margin:30px auto 0;
+      padding:0 18px;
+    }
+
+    @media(max-width:760px){
+      .admin-layout{
+        grid-template-columns:1fr;
+      }
+
+      .admin-sidebar{
+        position:static;
+      }
+
+      .admin-tab{
+        text-align:center;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
 <header class="header">
-  <div class="logo">Ting Ting Tang Tang</div>
+  <a class="logo" href="index.html">Ting Ting Tang Tang</a>
   <nav>
     <a href="index.html">Trang chủ</a>
   </nav>
 </header>
 
-<main class="admin">
-  <h1>Bảng điều khiển Admin</h1>
+<main>
+  <div class="admin-top">
+    <h1>Bảng điều khiển Admin</h1>
+  </div>
 
-  <section class="admin-box" id="loginBox">
+  <section class="admin-box admin-top" id="loginBox">
     <h2>Đăng nhập Admin</h2>
     <form id="loginForm">
       <input name="email" type="email" placeholder="Email admin" required>
@@ -27,48 +109,67 @@
   </section>
 
   <section id="adminPanel" style="display:none;">
-    <button id="logoutBtn" class="delete-btn">Đăng xuất</button>
+    <div class="admin-top">
+      <button id="logoutBtn" class="delete-btn">Đăng xuất</button>
+    </div>
 
-    <section class="admin-box">
-      <h2>Tạo / Sửa truyện</h2>
-      <form id="storyForm">
-        <input type="hidden" name="id">
-        <input name="title" placeholder="Tên truyện" required>
-        <input name="author" placeholder="Tác giả">
-        <select name="genre">
-          <option value="Linh dị">Linh dị</option>
-          <option value="Ngôn tình">Ngôn tình</option>
-          <option value="Khác">Khác</option>
-        </select>
-        <input name="cover" placeholder="Link ảnh bìa hoặc upload bên dưới">
-        <input name="coverFile" type="file" accept="image/*">
-        <textarea name="description" placeholder="Mô tả truyện"></textarea>
-        <button>Lưu truyện</button>
-      </form>
-    </section>
+    <div class="admin-layout">
+      <aside class="admin-sidebar">
+        <h3>Quản lý</h3>
+        <button class="admin-tab active" data-tab="chaptersPage">Danh sách chương</button>
+        <button class="admin-tab" data-tab="storyFormPage">Tạo / Sửa truyện</button>
+        <button class="admin-tab" data-tab="storiesPage">Danh sách truyện</button>
+      </aside>
 
-    <section class="admin-box">
-      <h2>Tạo / Sửa chương</h2>
-      <form id="chapterForm">
-        <input type="hidden" name="id">
-        <select name="story_id" id="storySelect"></select>
-        <input name="chapter_order" type="number" placeholder="Số chương, ví dụ 1" required>
-        <input name="title" placeholder="Tên chương, có thể bỏ trống">
-        <input name="shortlink" placeholder="Link rút gọn / affiliate, có thể bỏ trống">
-        <textarea name="content" placeholder="Nội dung chương" required></textarea>
-        <button>Lưu chương</button>
-      </form>
-    </section>
+      <div class="admin-content">
+        <section class="admin-page active" id="chaptersPage">
+          <section class="admin-box">
+            <h2>Tạo / Sửa chương</h2>
+            <form id="chapterForm">
+              <input type="hidden" name="id">
+              <select name="story_id" id="storySelect"></select>
+              <input name="chapter_order" type="number" placeholder="Số chương, ví dụ 1" required>
+              <input name="title" placeholder="Tên chương, có thể bỏ trống">
+              <input name="shortlink" placeholder="Link rút gọn / affiliate, có thể bỏ trống">
+              <textarea name="content" placeholder="Nội dung chương" required></textarea>
+              <button>Lưu chương</button>
+            </form>
+          </section>
 
-    <section class="admin-box">
-      <h2>Danh sách truyện</h2>
-      <div id="adminStoryList"></div>
-    </section>
+          <section class="admin-box">
+            <h2>Danh sách chương</h2>
+            <div id="adminChapterList"></div>
+          </section>
+        </section>
 
-    <section class="admin-box">
-      <h2>Danh sách chương</h2>
-      <div id="adminChapterList"></div>
-    </section>
+        <section class="admin-page" id="storyFormPage">
+          <section class="admin-box">
+            <h2>Tạo / Sửa truyện</h2>
+            <form id="storyForm">
+              <input type="hidden" name="id">
+              <input name="title" placeholder="Tên truyện" required>
+              <input name="author" placeholder="Tác giả">
+              <select name="genre">
+                <option value="Linh dị">Linh dị</option>
+                <option value="Ngôn tình">Ngôn tình</option>
+                <option value="Khác">Khác</option>
+              </select>
+              <input name="cover" placeholder="Link ảnh bìa hoặc upload bên dưới">
+              <input name="coverFile" type="file" accept="image/*">
+              <textarea name="description" placeholder="Mô tả truyện"></textarea>
+              <button>Lưu truyện</button>
+            </form>
+          </section>
+        </section>
+
+        <section class="admin-page" id="storiesPage">
+          <section class="admin-box">
+            <h2>Danh sách truyện</h2>
+            <div id="adminStoryList"></div>
+          </section>
+        </section>
+      </div>
+    </div>
   </section>
 </main>
 
