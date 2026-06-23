@@ -127,29 +127,34 @@ async function loadStory() {
 
   document.getElementById("storyDetail").innerHTML = `
     <div class="story-box">
-      ${story.cover ? `
-        <img 
-          src="${story.cover}" 
-          style="max-width:320px;width:100%;border-radius:12px;margin-bottom:28px;display:block;"
-        >
-      ` : ""}
+      <div class="story-header-layout">
+        <div class="story-left">
+          ${
+            story.cover
+              ? `<img src="${story.cover}" alt="${escapeHtml(story.title)}">`
+              : ""
+          }
 
-      <h1>${story.title}</h1>
+          <h1>${escapeHtml(story.title)}</h1>
 
-      <p class="meta">
-        Tác giả: ${story.author || ""} |
-        Thể loại: ${story.genre || ""}
-      </p>
+          <p class="meta">
+            Tác giả: ${escapeHtml(story.author || "")}<br>
+            Thể loại: ${escapeHtml(story.genre || "")}
+          </p>
+        </div>
 
-      <div class="story-description" style="font-size:19px;line-height:1.9;margin-top:24px;">
-        ${formatDescription(story.description || "")}
+        <div class="story-right">
+          <div class="story-description">
+            ${formatDescription(story.description || "")}
+          </div>
+
+          ${
+            allChapters.length
+              ? `<a class="read-first-btn" href="${chapterUrl(allChapters[0])}">Đọc từ đầu</a>`
+              : ""
+          }
+        </div>
       </div>
-
-      ${
-        allChapters.length
-          ? `<a class="chapter-nav" href="${chapterUrl(allChapters[0])}">Đọc từ đầu</a>`
-          : ""
-      }
     </div>
   `;
 
