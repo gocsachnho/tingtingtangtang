@@ -18,6 +18,8 @@ a {
   text-decoration: none;
 }
 
+/* HEADER */
+
 .header {
   display: grid;
   grid-template-columns: 360px 1fr 260px;
@@ -44,7 +46,8 @@ a {
   flex-wrap: nowrap;
 }
 
-.menu a {
+.menu a,
+.dropbtn {
   color: #d8e6ff;
   font-size: 18px;
   font-weight: 700;
@@ -57,10 +60,7 @@ a {
 
 .dropbtn {
   background: transparent;
-  color: #d8e6ff;
   border: none;
-  font-size: 18px;
-  font-weight: 700;
   cursor: pointer;
   padding: 0;
 }
@@ -97,7 +97,7 @@ a {
   color: white;
 }
 
-/* SLIDER */
+/* HERO SLIDER */
 
 .hero {
   padding: 34px 5%;
@@ -130,19 +130,44 @@ a {
   height: 100%;
   display: block;
   color: white;
+  overflow: hidden;
 }
 
-.hero-slide img {
+.hero-bg {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: blur(14px) brightness(.6);
+  transform: scale(1.12);
+  opacity: .85;
+  z-index: 0;
+}
+
+.hero-poster {
+  position: absolute;
+  right: 70px;
+  bottom: 35px;
+  width: 260px;
+  height: 380px;
+  object-fit: cover;
+  border-radius: 18px;
+  z-index: 2;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
 }
 
 .hero-slide::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(8,17,28,.96), rgba(8,17,28,.55), rgba(8,17,28,.1));
+  z-index: 1;
+  background: linear-gradient(
+    90deg,
+    rgba(8,17,28,.98),
+    rgba(8,17,28,.72),
+    rgba(8,17,28,.35)
+  );
 }
 
 .hero-slide-info {
@@ -150,6 +175,7 @@ a {
   left: 50px;
   bottom: 50px;
   z-index: 3;
+  max-width: 60%;
 }
 
 .hero-slide-info span {
@@ -168,6 +194,7 @@ a {
   padding: 0;
   margin: 0 0 12px;
   font-size: 48px;
+  line-height: 1.15;
 }
 
 .hero-slide-info p {
@@ -216,7 +243,7 @@ h2 {
   font-size: 30px;
 }
 
-/* CARD TRUYỆN - VUÔNG HƠN */
+/* CARD TRUYỆN */
 
 .grid {
   display: grid;
@@ -418,118 +445,154 @@ button {
     height: 330px;
   }
 
+  .hero-poster {
+    width: 190px;
+    height: 275px;
+    right: 30px;
+    bottom: 25px;
+  }
+
+  .hero-slide-info {
+    max-width: 60%;
+  }
+
   .hero-slide-info h2 {
     font-size: 34px;
   }
 }
 
-/* ===== MOBILE HERO COMPACT ===== */
-
-@media (max-width:650px){
-
-  .header{
-    padding:10px 16px;
-    gap:8px;
+@media (max-width:650px) {
+  .header {
+    padding: 10px 16px;
+    gap: 8px;
   }
 
-  .logo{
-    font-size:24px;
-    margin-bottom:2px;
+  .logo {
+    font-size: 24px;
+    margin-bottom: 2px;
   }
 
-  .menu{
-    gap:10px;
+  .menu {
+    gap: 10px;
   }
 
   .menu a,
-  .dropbtn{
-    font-size:14px;
+  .dropbtn {
+    font-size: 14px;
   }
 
-  .search-wrap input{
-    padding:10px 14px;
+  .search-wrap input {
+    padding: 10px 14px;
   }
 
-  .hero{
-    padding:10px 4% 14px;
+  .dropdown-content {
+    left: 50%;
+    transform: translateX(-50%);
   }
 
-  .full-slider{
-    height:180px;
-    border-radius:16px;
+  .hero {
+    padding: 10px 4% 14px;
   }
 
-  .hero-slide-info{
-    left:16px;
-    bottom:14px;
-    max-width:58%;
+  .full-slider {
+    height: 180px;
+    border-radius: 16px;
   }
 
-  .hero-slide-info span{
-    font-size:10px;
-    padding:4px 8px;
-    margin-bottom:6px;
+  .hero-slide-info {
+    left: 16px;
+    bottom: 14px;
+    max-width: 58%;
   }
 
-  .hero-slide-info h2{
-    font-size:20px !important;
-    line-height:1.15;
-    margin-bottom:6px;
-
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
+  .hero-slide-info span {
+    font-size: 10px;
+    padding: 4px 8px;
+    margin-bottom: 6px;
   }
 
-  .hero-slide-info p{
-    font-size:12px !important;
-    line-height:1.3;
-
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
+  .hero-slide-info h2 {
+    font-size: 20px !important;
+    line-height: 1.15;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  .hero-slide .hero-poster{
-    width:82px;
-    height:118px;
-    right:12px;
-    bottom:12px;
-    border-radius:10px;
+  .hero-slide-info p {
+    font-size: 12px !important;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  .grid{
-    grid-template-columns:repeat(2,1fr);
-    gap:12px;
+  .hero-poster {
+    width: 82px;
+    height: 118px;
+    right: 12px;
+    bottom: 12px;
+    border-radius: 10px;
   }
 
-  .cover{
-    height:150px;
+  .layout {
+    padding: 20px 4%;
+  }
+
+  h2 {
+    font-size: 24px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card {
+    width: 100%;
+    border-radius: 14px;
+  }
+
+  .cover {
+    height: 150px;
+  }
+
+  .info {
+    min-height: 135px;
+    padding: 10px;
+  }
+
+  .info h3 {
+    font-size: 15px;
+  }
+
+  .meta {
+    font-size: 12px;
   }
 }
 
-@media (max-width:390px){
-
-  .full-slider{
-    height:170px;
+@media (max-width:390px) {
+  .full-slider {
+    height: 170px;
   }
 
-  .hero-slide-info{
-    max-width:55%;
+  .hero-slide-info {
+    max-width: 55%;
   }
 
-  .hero-slide-info h2{
-    font-size:18px !important;
+  .hero-slide-info h2 {
+    font-size: 18px !important;
   }
 
-  .hero-slide-info p{
-    font-size:11px !important;
+  .hero-slide-info p {
+    font-size: 11px !important;
   }
 
-  .hero-slide .hero-poster{
-    width:75px;
-    height:108px;
+  .hero-poster {
+    width: 75px;
+    height: 108px;
   }
 }
