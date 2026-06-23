@@ -8,9 +8,10 @@ html {
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Nunito", Arial, sans-serif;
   background: #f9f2f8;
   color: #4f4150;
+  font-weight: 600;
 }
 
 a {
@@ -33,7 +34,7 @@ a {
 
 .logo {
   font-family: "Great Vibes", cursive;
-  font-size: 34px;
+  font-size: 36px;
   color: #c77fb1;
   white-space: nowrap;
   line-height: 1;
@@ -51,8 +52,9 @@ a {
 .dropbtn {
   color: #6b5268;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
   white-space: nowrap;
+  font-family: "Nunito", sans-serif;
 }
 
 .menu a:hover,
@@ -107,6 +109,7 @@ a {
   border: 1px solid #ead5e4;
   background: #fffafd;
   color: #4f4150;
+  font-weight: 700;
 }
 
 .search-wrap input::placeholder {
@@ -206,18 +209,21 @@ a {
 }
 
 .hero-slide-info h2 {
+  font-family: "Playfair Display", serif;
   color: white;
   border: none;
   padding: 0;
   margin: 0 0 12px;
-  font-size: 48px;
-  line-height: 1.15;
+  font-size: 50px;
+  line-height: 1.12;
+  font-weight: 800;
 }
 
 .hero-slide-info p {
   font-size: 22px;
   margin: 0;
   color: #fff3fa;
+  font-weight: 700;
 }
 
 .hero-dots {
@@ -254,11 +260,14 @@ section {
 }
 
 h2 {
+  font-family: "Playfair Display", serif;
   color: #b96fa3;
   border-bottom: 1px solid #ead5e4;
   padding-bottom: 10px;
   margin-bottom: 22px;
-  font-size: 30px;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: .3px;
 }
 
 /* CARD TRUYỆN */
@@ -304,10 +313,12 @@ h2 {
 }
 
 .info h3 {
+  font-family: "Playfair Display", serif;
   margin: 0 0 9px;
-  font-size: 17px;
-  line-height: 1.35;
-  color: #4f4150;
+  font-size: 22px;
+  line-height: 1.25;
+  color: #5b4258;
+  font-weight: 800;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -316,8 +327,9 @@ h2 {
 
 .meta {
   color: #8a7686;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
+  font-weight: 700;
 }
 
 /* ASIDE */
@@ -332,7 +344,10 @@ aside {
 }
 
 aside h3 {
+  font-family: "Playfair Display", serif;
   color: #b96fa3;
+  font-size: 30px;
+  font-weight: 800;
   margin-top: 0;
 }
 
@@ -344,9 +359,10 @@ aside ul {
 aside li {
   padding: 10px 0;
   border-bottom: 1px solid #ead5e4;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.45;
   color: #6b5268;
+  font-weight: 700;
 }
 
 footer {
@@ -355,6 +371,7 @@ footer {
   border-top: 1px solid #ead5e4;
   color: #8a7686;
   background: #fff7fc;
+  font-weight: 700;
 }
 
 /* FORM / ADMIN / STORY */
@@ -377,6 +394,15 @@ footer {
   box-shadow: 0 10px 25px rgba(185, 111, 163, .10);
 }
 
+.story-box h1,
+.admin-box h1,
+.reader h1,
+.detail h1 {
+  font-family: "Playfair Display", serif;
+  color: #5b4258;
+  font-weight: 800;
+}
+
 .chapter-row {
   display: flex;
   justify-content: space-between;
@@ -387,6 +413,7 @@ footer {
   border-radius: 10px;
   margin-bottom: 10px;
   color: #4f4150;
+  font-weight: 800;
 }
 
 .chapter-row:hover {
@@ -407,6 +434,8 @@ textarea {
   border: 1px solid #ead5e4;
   border-radius: 10px;
   color: #4f4150;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
 }
 
 textarea {
@@ -430,8 +459,9 @@ button {
   border: none;
   padding: 11px 18px;
   border-radius: 20px;
-  font-weight: bold;
+  font-weight: 800;
   cursor: pointer;
+  font-family: "Nunito", sans-serif;
 }
 
 button:hover {
@@ -492,7 +522,7 @@ button:hover {
   }
 
   .hero-slide-info h2 {
-    font-size: 34px;
+    font-size: 36px;
   }
 }
 
@@ -503,7 +533,7 @@ button:hover {
   }
 
   .logo {
-    font-size: 24px;
+    font-size: 26px;
     margin-bottom: 2px;
   }
 
@@ -578,7 +608,7 @@ button:hover {
   }
 
   h2 {
-    font-size: 24px;
+    font-size: 28px;
   }
 
   .grid {
@@ -601,7 +631,7 @@ button:hover {
   }
 
   .info h3 {
-    font-size: 15px;
+    font-size: 18px;
   }
 
   .meta {
