@@ -20,12 +20,7 @@ function splitParagraphs(text) {
   return String(text || "")
     .replace(/\r/g, "")
     .replace(/\\n/g, "\n")
-    .replace(/。/g, "。\n")
-    .replace(/！/g, "！\n")
-    .replace(/？/g, "？\n")
-    .replace(/([.!?…])\s*,\s*/g, "$1\n")
-    .replace(/,\s*(?=[A-ZÀ-ỸĐ])/g, "\n")
-    .split(/\n+/)
+    .split(/\n{2,}|\n/)
     .map(line => line.trim())
     .filter(Boolean);
 }
