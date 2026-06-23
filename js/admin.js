@@ -2,12 +2,25 @@ let stories = [];
 let chapters = [];
 let currentStoryId = "";
 
+function setupTabs() {
+  document.querySelectorAll(".admin-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".admin-tab").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".admin-page").forEach(p => p.classList.remove("active"));
+
+      btn.classList.add("active");
+      document.getElementById(btn.dataset.tab).classList.add("active");
+    });
+  });
+}
+
 async function checkLogin() {
   const { data } = await db.auth.getSession();
 
   if (data.session) {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("adminPanel").style.display = "block";
+    setupTabs();
     await loadAdminData();
   } else {
     document.getElementById("loginBox").style.display = "block";
@@ -216,6 +229,7 @@ function editStory(id) {
   renderStorySelect();
   renderChapters();
 
+  document.querySelector('[data-tab="storyFormPage"]').click();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -315,6 +329,7 @@ function editChapter(id) {
   renderStorySelect();
   renderChapters();
 
+  document.querySelector('[data-tab="chaptersPage"]').click();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
