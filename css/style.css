@@ -121,22 +121,112 @@ nav a:hover,
   color: white;
 }
 
-/* ================= HERO ================= */
+/* ================= HERO FULL SLIDER ================= */
 
 .hero {
-  padding: 64px 6%;
+  padding: 34px 5%;
   background: linear-gradient(135deg, #11233a, #08111c);
+  margin-bottom: 0;
 }
 
-.hero h1 {
-  font-size: 46px;
+.full-slider {
+  width: 100%;
+  height: 470px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid #263950;
+  background: #111f31;
+}
+
+.hero-slider {
+  position: relative;
+}
+
+.hero-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.55s ease;
+}
+
+.hero-slide {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
+  color: #fff;
+  display: block;
+}
+
+.hero-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(8,17,28,.96),
+    rgba(8,17,28,.60),
+    rgba(8,17,28,.15)
+  );
+}
+
+.hero-slide-info {
+  position: absolute;
+  left: 50px;
+  bottom: 50px;
+  z-index: 2;
+  max-width: 700px;
+}
+
+.hero-slide-info span {
+  display: inline-block;
+  color: #111;
+  background: #ffd369;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.hero-slide-info h2 {
+  border: none;
+  padding: 0;
   margin: 0 0 12px;
-  color: #ffd369;
+  color: #fff;
+  font-size: 48px;
+  line-height: 1.15;
 }
 
-.hero p {
-  font-size: 18px;
+.hero-slide-info p {
+  margin: 0;
   color: #d8e6ff;
+  font-size: 22px;
+}
+
+.hero-dots {
+  position: absolute;
+  right: 22px;
+  bottom: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 5;
+}
+
+.hero-dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #7b8ba4;
+}
+
+.hero-dots span.active {
+  background: #ffd369;
 }
 
 /* ================= LAYOUT ================= */
@@ -160,15 +250,17 @@ h2 {
   font-size: 30px;
 }
 
-/* ================= STORY GRID - TRANG CHỦ ================= */
+/* ================= STORY GRID ================= */
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(4, 180px);
+  gap: 22px;
+  align-items: start;
 }
 
 .card {
+  width: 180px;
   background: #111f31;
   border: 1px solid #263950;
   border-radius: 14px;
@@ -182,7 +274,7 @@ h2 {
 }
 
 .cover {
-  height: 250px;
+  height: 240px;
   background: linear-gradient(135deg, #1e3a5f, #241a10);
   overflow: hidden;
 }
@@ -194,7 +286,7 @@ h2 {
 }
 
 .info {
-  padding: 13px;
+  padding: 12px;
 }
 
 .info h3 {
@@ -336,18 +428,6 @@ button {
 
 /* ================= RESPONSIVE ================= */
 
-@media (min-width: 1200px) {
-  .grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-@media (min-width: 1550px) {
-  .grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
 @media (max-width: 1000px) {
   .header {
     grid-template-columns: 1fr;
@@ -380,6 +460,18 @@ button {
   aside {
     display: none;
   }
+
+  .full-slider {
+    height: 330px;
+  }
+
+  .hero-slide-info h2 {
+    font-size: 34px;
+  }
+
+  .hero-slide-info p {
+    font-size: 18px;
+  }
 }
 
 @media (max-width: 650px) {
@@ -408,15 +500,31 @@ button {
   }
 
   .hero {
-    padding: 32px 6%;
+    padding: 20px 4%;
   }
 
-  .hero h1 {
-    font-size: 32px;
+  .full-slider {
+    height: 230px;
+    border-radius: 16px;
   }
 
-  .hero p {
-    font-size: 15px;
+  .hero-slide-info {
+    left: 18px;
+    bottom: 20px;
+    max-width: 82%;
+  }
+
+  .hero-slide-info span {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  .hero-slide-info h2 {
+    font-size: 23px;
+  }
+
+  .hero-slide-info p {
+    font-size: 14px;
   }
 
   .layout {
@@ -429,16 +537,17 @@ button {
   }
 
   .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
 
   .card {
+    width: 100%;
     border-radius: 12px;
   }
 
   .cover {
-    height: 190px;
+    height: 210px;
   }
 
   .info {
@@ -473,161 +582,10 @@ button {
   }
 
   .cover {
-    height: 170px;
-  }
-
-  .info h3 {
-    font-size: 14px;
-  }
-}
-/* ================= HERO SLIDER ================= */
-
-.hero {
-  display: grid;
-  grid-template-columns: 1fr 520px;
-  gap: 34px;
-  align-items: center;
-  min-height: 290px;
-}
-
-.hero-left h1 {
-  font-size: 50px;
-  margin: 0 0 12px;
-  color: #ffd369;
-}
-
-.hero-slider {
-  position: relative;
-  width: 100%;
-  height: 230px;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid #263950;
-  background: #111f31;
-}
-
-.hero-track {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.55s ease;
-}
-
-.hero-slide {
-  position: relative;
-  min-width: 100%;
-  height: 100%;
-  color: #fff;
-  display: block;
-}
-
-.hero-slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.hero-slide::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(8,17,28,.95),
-    rgba(8,17,28,.55),
-    rgba(8,17,28,.15)
-  );
-}
-
-.hero-slide-info {
-  position: absolute;
-  left: 24px;
-  bottom: 24px;
-  z-index: 2;
-  max-width: 72%;
-}
-
-.hero-slide-info span {
-  display: inline-block;
-  color: #111;
-  background: #ffd369;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 800;
-  margin-bottom: 10px;
-}
-
-.hero-slide-info h2 {
-  border: none;
-  padding: 0;
-  margin: 0 0 8px;
-  color: #fff;
-  font-size: 26px;
-  line-height: 1.25;
-}
-
-.hero-slide-info p {
-  margin: 0;
-  color: #d8e6ff;
-  font-size: 16px;
-}
-
-.hero-dots {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
-  display: flex;
-  gap: 7px;
-  z-index: 5;
-}
-
-.hero-dots span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #7b8ba4;
-}
-
-.hero-dots span.active {
-  background: #ffd369;
-}
-
-@media (max-width: 900px) {
-  .hero {
-    grid-template-columns: 1fr;
-    padding: 28px 5%;
-  }
-
-  .hero-left h1 {
-    font-size: 34px;
-  }
-
-  .hero-slider {
-    height: 210px;
-  }
-
-  .hero-slide-info h2 {
-    font-size: 22px;
-  }
-}
-
-@media (max-width: 520px) {
-  .hero-slider {
     height: 190px;
   }
 
-  .hero-slide-info {
-    left: 16px;
-    bottom: 18px;
-    max-width: 82%;
-  }
-
-  .hero-slide-info h2 {
-    font-size: 20px;
-  }
-
-  .hero-slide-info p {
+  .info h3 {
     font-size: 14px;
   }
 }
