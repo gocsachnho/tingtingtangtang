@@ -3,27 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <title>Chi tiết truyện</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/style.css">
 
   <style>
+    body {
+      font-family: "Inter", Arial, sans-serif;
+    }
+
     .header {
       display: grid !important;
-      grid-template-columns: 430px 1fr 260px !important;
+      grid-template-columns: 360px 1fr 240px !important;
       align-items: center !important;
-      gap: 30px !important;
-      padding: 18px 5% !important;
+      gap: 24px !important;
+      padding: 16px 5% !important;
       background: #0d1a2a !important;
       border-bottom: 1px solid #263950 !important;
+      position: sticky;
+      top: 0;
+      z-index: 99;
     }
 
     .logo {
       font-family: "Great Vibes", cursive !important;
-      font-size: 36px !important;
+      font-size: 34px !important;
       color: #ffd369 !important;
       white-space: nowrap !important;
       line-height: 1 !important;
@@ -34,12 +42,12 @@
       display: flex !important;
       justify-content: center !important;
       align-items: center !important;
-      gap: 34px !important;
+      gap: 28px !important;
       flex-wrap: nowrap !important;
     }
 
     .menu a {
-      font-size: 20px !important;
+      font-size: 18px !important;
       font-weight: 700 !important;
       color: #e6f0ff !important;
       white-space: nowrap !important;
@@ -53,69 +61,80 @@
 
     .search-wrap input {
       width: 220px !important;
-      padding: 11px 15px !important;
+      padding: 10px 14px !important;
       border-radius: 24px !important;
       border: 1px solid #40556f !important;
       background: #0b1625 !important;
       color: white !important;
     }
 
+    .detail {
+      max-width: 1180px !important;
+      margin: 0 auto !important;
+      padding: 28px 18px 60px !important;
+    }
+
     .story-box {
-      max-width: 1220px !important;
-      margin: 35px auto 28px !important;
+      margin: 0 auto 28px !important;
       padding: 28px !important;
+      background: #111f31 !important;
+      border: 1px solid #263950 !important;
+      border-radius: 18px !important;
     }
 
     .story-header-layout {
       display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 42px;
+      grid-template-columns: 310px 1fr;
+      gap: 34px;
       align-items: start;
     }
 
     .story-left img {
       width: 100%;
-      max-width: 350px;
-      border-radius: 16px;
+      max-width: 310px;
+      border-radius: 14px;
       display: block;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .story-left h1 {
-      font-size: 38px;
+      font-size: 32px;
       line-height: 1.25;
-      margin: 0 0 18px;
+      margin: 0 0 14px;
       color: #fff;
     }
 
     .story-left .meta {
-      font-size: 17px;
-      line-height: 1.7;
-    }
-
-    .story-right {
-      padding-top: 4px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #bfd2ee;
     }
 
     .story-description {
-      font-size: 19px;
-      line-height: 1.9;
+      font-size: 18px;
+      line-height: 1.85;
       color: #f4f7ff;
     }
 
     .story-description p {
-      margin: 0 0 20px;
+      margin: 0 0 16px;
     }
 
     .read-first-btn {
       display: inline-block;
       margin-top: 8px;
-      padding: 11px 18px;
+      padding: 10px 18px;
       border-radius: 999px;
       background: #ffd369;
       color: #111 !important;
-      font-weight: 700;
+      font-weight: 800;
       text-decoration: none;
+    }
+
+    .chapter-row {
+      min-height: 54px;
+      align-items: center;
+      font-size: 16px;
     }
 
     .pagination {
@@ -123,7 +142,7 @@
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
-      margin: 30px 0 45px;
+      margin: 28px 0 45px;
     }
 
     .pagination button {
@@ -136,47 +155,180 @@
       font-weight: 700;
     }
 
-    .pagination button:hover {
-      border-color: #ffd369;
-      color: #ffd369;
-    }
-
     .pagination button.active {
       background: #ffd369;
       color: #111;
       border-color: #ffd369;
     }
 
-    .pagination span {
-      color: #9fb3c8;
-      padding: 10px 4px;
+    .recommend-section {
+      margin-top: 45px;
     }
 
-    @media (max-width: 950px) {
+    .recommend-section h2 {
+      font-size: 32px;
+      border: none;
+      margin-bottom: 22px;
+    }
+
+    .recommend-scroll {
+      display: flex;
+      gap: 22px;
+      overflow-x: auto;
+      padding-bottom: 16px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .recommend-card {
+      min-width: 170px;
+      max-width: 170px;
+      color: #fff;
+      text-decoration: none;
+      scroll-snap-align: start;
+    }
+
+    .recommend-card img,
+    .recommend-cover {
+      width: 170px;
+      height: 230px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: linear-gradient(135deg, #1e3a5f, #241a10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffd369;
+      text-align: center;
+      padding: 12px;
+      font-weight: 800;
+    }
+
+    .recommend-card h3 {
+      font-size: 17px;
+      margin: 12px 0 5px;
+      line-height: 1.35;
+    }
+
+    .recommend-card p {
+      margin: 0;
+      color: #aebbd0;
+      font-size: 14px;
+    }
+
+    @media (max-width: 760px) {
       .header {
         grid-template-columns: 1fr !important;
-        gap: 16px !important;
+        gap: 10px !important;
+        padding: 10px 14px !important;
+        position: static;
+      }
+
+      .logo {
+        font-size: 29px !important;
+        text-align: center;
+        display: block;
       }
 
       .menu {
         justify-content: flex-start !important;
-        flex-wrap: wrap !important;
+        gap: 16px !important;
+        overflow-x: auto;
+        padding: 4px 0;
+      }
+
+      .menu a {
+        font-size: 14px !important;
+        flex: 0 0 auto;
       }
 
       .search-wrap {
-        justify-content: flex-start !important;
+        display: none !important;
       }
 
-      .search-wrap input {
-        width: 100% !important;
+      .detail {
+        padding: 14px 12px 50px !important;
+      }
+
+      .story-box {
+        padding: 18px !important;
+        border-radius: 14px !important;
       }
 
       .story-header-layout {
         grid-template-columns: 1fr;
+        gap: 18px;
       }
 
       .story-left img {
-        max-width: 100%;
+        max-width: 230px;
+        margin: 0 auto 18px;
+      }
+
+      .story-left h1 {
+        font-size: 26px;
+        text-transform: none;
+      }
+
+      .story-left .meta {
+        font-size: 13px;
+      }
+
+      .story-description {
+        font-size: 17px;
+        line-height: 1.8;
+      }
+
+      .story-description p {
+        margin-bottom: 14px;
+      }
+
+      .read-first-btn {
+        font-size: 14px;
+        padding: 9px 15px;
+      }
+
+      h2 {
+        font-size: 24px !important;
+      }
+
+      .chapter-row {
+        font-size: 14px;
+        padding: 12px 12px;
+        gap: 12px;
+      }
+
+      .chapter-row span:last-child {
+        flex-shrink: 0;
+      }
+
+      .pagination {
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+
+      .pagination button {
+        flex: 0 0 auto;
+        padding: 9px 13px;
+      }
+
+      .recommend-section h2 {
+        font-size: 28px !important;
+      }
+
+      .recommend-card {
+        min-width: 140px;
+        max-width: 140px;
+      }
+
+      .recommend-card img,
+      .recommend-cover {
+        width: 140px;
+        height: 190px;
+      }
+
+      .recommend-card h3 {
+        font-size: 16px;
       }
     }
   </style>
@@ -206,6 +358,11 @@
   <h2>Danh sách chương</h2>
   <div id="chapterList"></div>
   <div id="pagination"></div>
+
+  <section class="recommend-section">
+    <h2>Có thể bạn quan tâm</h2>
+    <div id="recommendList" class="recommend-scroll"></div>
+  </section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

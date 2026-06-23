@@ -7,14 +7,14 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Noto+Serif:wght@400;500;600;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     body {
       margin: 0;
       background: #08111c;
       color: #e9eef7;
-      font-family: Arial, sans-serif;
+      font-family: "Inter", Arial, sans-serif;
     }
 
     a {
@@ -23,46 +23,51 @@
     }
 
     .header {
-      display: flex;
+      display: grid;
+      grid-template-columns: 360px 1fr;
       align-items: center;
-      justify-content: space-between;
-      padding: 18px 5%;
+      gap: 20px;
+      padding: 16px 5%;
       background: #0d1a2a;
       border-bottom: 1px solid #263950;
     }
 
     .logo {
       font-family: "Great Vibes", cursive;
-      font-size: 36px;
+      font-size: 34px;
       color: #ffd369;
+      white-space: nowrap;
+      line-height: 1;
     }
 
     .menu {
       display: flex;
-      gap: 34px;
-      font-size: 20px;
-      font-weight: 700;
+      justify-content: flex-end;
+      gap: 28px;
+      font-size: 18px;
+      font-weight: 800;
     }
 
     .reader {
-      max-width: 980px;
-      margin: 48px auto;
-      padding: 0 24px;
+      max-width: 930px;
+      margin: 34px auto;
+      padding: 0 18px;
     }
 
     .chapter-nav {
       display: flex;
       justify-content: space-between;
-      gap: 16px;
-      margin: 26px 0;
+      gap: 12px;
+      margin: 22px 0;
     }
 
     .chapter-nav a {
       background: #ffd369;
       color: #111;
-      padding: 12px 22px;
+      padding: 11px 20px;
       border-radius: 999px;
-      font-weight: 700;
+      font-weight: 800;
+      font-size: 15px;
     }
 
     .chapter-nav a.disabled {
@@ -74,30 +79,87 @@
       background: #111f31;
       border: 1px solid #263950;
       border-radius: 18px;
-      padding: 46px 58px;
+      padding: 38px 46px;
     }
 
     h1 {
       text-align: center;
       color: #ffd369;
+      font-size: 34px;
+      line-height: 1.35;
+      margin: 0 0 16px;
     }
 
     .story-title {
       text-align: center;
       color: #9fb3ff;
-      margin-bottom: 42px;
-      font-weight: 700;
+      margin-bottom: 36px;
+      font-weight: 800;
+      font-size: 17px;
     }
 
     .chapter-content {
       font-family: "Noto Serif", Georgia, serif;
       font-size: 20px;
-      line-height: 2.1;
+      line-height: 2;
       color: #f1f4fa;
     }
 
     .chapter-content p {
-      margin: 0 0 24px;
+      margin: 0 0 22px;
+    }
+
+    @media (max-width: 760px) {
+      .header {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 10px 14px;
+      }
+
+      .logo {
+        font-size: 29px;
+        text-align: center;
+      }
+
+      .menu {
+        justify-content: center;
+        gap: 22px;
+        font-size: 14px;
+      }
+
+      .reader {
+        margin: 18px auto;
+        padding: 0 12px;
+      }
+
+      .chapter-box {
+        padding: 24px 18px;
+        border-radius: 14px;
+      }
+
+      h1 {
+        font-size: 25px;
+        line-height: 1.35;
+      }
+
+      .story-title {
+        font-size: 15px;
+        margin-bottom: 28px;
+      }
+
+      .chapter-content {
+        font-size: 18px;
+        line-height: 1.85;
+      }
+
+      .chapter-content p {
+        margin-bottom: 18px;
+      }
+
+      .chapter-nav a {
+        font-size: 13px;
+        padding: 9px 13px;
+      }
     }
   </style>
 </head>
