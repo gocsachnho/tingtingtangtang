@@ -41,7 +41,7 @@ function renderGrid(id, list) {
     return;
   }
 
-  box.innerHTML = list.slice(0, 10).map(storyCard).join("");
+  box.innerHTML = list.slice(0, 4).map(storyCard).join("");
 }
 
 function renderLatestChapters() {
