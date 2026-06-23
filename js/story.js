@@ -45,7 +45,7 @@ function renderChapterPage(page) {
   document.getElementById("chapterList").innerHTML = pageChapters.map(chapter => `
     <a class="chapter-row" href="${chapterUrl(chapter)}">
       <span>${chapterLabel(chapter)}</span>
-      <span>${chapter.shortlink ? "Qua link →" : "Đọc →"}</span>
+      <span>Đọc →</span>
     </a>
   `).join("");
 
