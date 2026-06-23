@@ -5,6 +5,7 @@ const CHAPTERS_PER_PAGE = 50;
 
 let allChapters = [];
 let currentPage = 1;
+let currentStory = null;
 
 function escapeHtml(text) {
   return String(text || "")
@@ -99,8 +100,42 @@ function renderPagination(totalPages) {
   }
 
   html += `</div>`;
-
   pagination.innerHTML = html;
+}
+
+async function loadRecommendations() {
+  const box = document.getElementById("recommendList");
+
+  if (!currentStory) {
+    box.innerHTML = "";
+    return;
+  }
+
+  const { data } = await db
+    .from("stories")
+    .select("*")
+    .eq("genre", currentStory.genre)
+    .neq("id", currentStory.id)
+    .limit(12);
+
+  const list = data || [];
+
+  if (!list.length) {
+    box.innerHTML = `<p class="meta">Chưa có truyện liên quan.</p>`;
+    return;
+  }
+
+  box.innerHTML = list.map(story => `
+    <a class="recommend-card" href="story.html?id=${story.id}">
+      ${
+        story.cover
+          ? `<img src="${story.cover}" alt="${escapeHtml(story.title)}">`
+          : `<div class="recommend-cover">${escapeHtml(story.title)}</div>`
+      }
+      <h3>${escapeHtml(story.title)}</h3>
+      <p>${escapeHtml(story.genre || "")}</p>
+    </a>
+  `).join("");
 }
 
 async function loadStory() {
@@ -114,6 +149,8 @@ async function loadStory() {
     document.getElementById("storyDetail").innerHTML = "<p>Không tìm thấy truyện.</p>";
     return;
   }
+
+  currentStory = story;
 
   const { data: chapters } = await db
     .from("chapters")
@@ -159,6 +196,7 @@ async function loadStory() {
   `;
 
   renderChapterPage(1);
+  loadRecommendations();
 }
 
 loadStory();
