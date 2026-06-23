@@ -26,6 +26,7 @@ function storyCard(story) {
 
 function chapterLabel(chapter) {
   const name = chapter.title && chapter.title.trim();
+
   return name
     ? `Chương ${chapter.chapter_order}: ${name}`
     : `Chương ${chapter.chapter_order}`;
@@ -40,7 +41,7 @@ function renderGrid(id, list) {
     return;
   }
 
-  box.innerHTML = list.slice(0, 8).map(storyCard).join("");
+  box.innerHTML = list.slice(0, 10).map(storyCard).join("");
 }
 
 function renderLatestChapters() {
@@ -64,6 +65,69 @@ function renderLatestChapters() {
       </li>
     `;
   }).join("");
+}
+
+function renderHeroSlider() {
+  const box = document.getElementById("heroSlider");
+  if (!box) return;
+
+  const latestChapters = [...chapters]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  const usedStoryIds = new Set();
+  const slides = [];
+
+  for (const chapter of latestChapters) {
+    const story = stories.find(s => s.id === chapter.story_id);
+    if (!story) continue;
+    if (usedStoryIds.has(story.id)) continue;
+
+    usedStoryIds.add(story.id);
+    slides.push({ story, chapter });
+
+    if (slides.length >= 3) break;
+  }
+
+  if (!slides.length) {
+    box.innerHTML = "";
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="hero-track">
+      ${slides.map(item => `
+        <a class="hero-slide" href="${chapterUrl(item.chapter)}">
+          ${
+            item.story.cover
+              ? `<img src="${item.story.cover}" alt="${item.story.title}">`
+              : ""
+          }
+
+          <div class="hero-slide-info">
+            <span>Vừa cập nhật</span>
+            <h2>${item.story.title}</h2>
+            <p>${chapterLabel(item.chapter)}</p>
+          </div>
+        </a>
+      `).join("")}
+    </div>
+
+    <div class="hero-dots">
+      ${slides.map((_, i) => `<span class="${i === 0 ? "active" : ""}"></span>`).join("")}
+    </div>
+  `;
+
+  let index = 0;
+  const track = box.querySelector(".hero-track");
+  const dots = box.querySelectorAll(".hero-dots span");
+
+  setInterval(() => {
+    index = (index + 1) % slides.length;
+    track.style.transform = `translateX(-${index * 100}%)`;
+
+    dots.forEach(dot => dot.classList.remove("active"));
+    dots[index].classList.add("active");
+  }, 3500);
 }
 
 async function loadHome() {
@@ -90,6 +154,7 @@ async function loadHome() {
     return !genre.includes("linh") && !genre.includes("ngôn");
   });
 
+  renderHeroSlider();
   renderGrid("newStories", newest);
   renderGrid("hotStories", hot);
   renderGrid("horrorStories", horror);
