@@ -112,31 +112,113 @@
       font-size: 17px;
     }
 
-  .chapter-content {
-  font-family: "Noto Serif", Georgia, serif;
-  font-size: 22px;
-  line-height: 2.1;
+    .chapter-content {
+      font-family: "Noto Serif", Georgia, serif;
+      font-size: 22px;
+      line-height: 2.1;
+      color: #2f2433 !important;
+      font-weight: 600;
+      text-align: justify;
+      text-align-last: left;
+      word-break: normal !important;
+      overflow-wrap: break-word !important;
+      white-space: normal !important;
+    }
 
-  color: #2f2433 !important;
-  font-weight: 600;
+    .chapter-content p {
+      margin: 0 0 24px;
+      color: #2f2433 !important;
+      font-weight: 600;
+      text-align: justify;
+      text-align-last: left;
+    }
 
-  text-align: justify;
-  text-align-last: left;
+    .comment-section {
+      margin-top: 34px;
+      background: #ffffff;
+      border: 1px solid #ead5e4;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 28px rgba(185,111,163,.12);
+    }
 
-  word-break: normal !important;
-  overflow-wrap: break-word !important;
-  white-space: normal !important;
-}
+    .comment-section h2 {
+      margin-top: 0;
+      color: #b96fa3;
+      font-family: "Playfair Display", serif;
+      font-size: 30px;
+      font-weight: 900;
+    }
 
-.chapter-content p {
-  margin: 0 0 24px;
+    .comment-form {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
 
-  color: #2f2433 !important;
-  font-weight: 600;
+    .comment-form input,
+    .comment-form textarea {
+      width: 100%;
+      background: #fffafd;
+      border: 1px solid #ead5e4;
+      color: #2f2433;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: "Nunito", Arial, sans-serif;
+    }
 
-  text-align: justify;
-  text-align-last: left;
-}
+    .comment-form textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .comment-form button,
+    .comment-delete {
+      width: fit-content;
+      background: #d88ac0;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
+      font-family: "Nunito", Arial, sans-serif;
+    }
+
+    .comment-delete {
+      background: #e7798f;
+      margin-top: 8px;
+    }
+
+    .comment-item {
+      border-top: 1px solid #ead5e4;
+      padding: 16px 0;
+    }
+
+    .comment-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #5b4258;
+    }
+
+    .comment-head b {
+      font-weight: 900;
+    }
+
+    .comment-head span {
+      color: #9a8193;
+      font-size: 13px;
+    }
+
+    .comment-item p {
+      color: #2f2433;
+      font-weight: 700;
+      line-height: 1.7;
+      margin: 10px 0 0;
+    }
+
     @media (max-width: 760px) {
       .header {
         grid-template-columns: 1fr;
@@ -188,6 +270,15 @@
         font-size: 13px;
         padding: 9px 13px;
       }
+
+      .comment-section {
+        padding: 18px;
+        border-radius: 14px;
+      }
+
+      .comment-section h2 {
+        font-size: 25px;
+      }
     }
   </style>
 </head>
@@ -214,6 +305,8 @@
     <article class="chapter-content" id="chapterContent"></article>
   </section>
 
+  <div id="commentBox"></div>
+
   <div class="chapter-nav">
     <a id="prevBottom" href="#">← Chương trước</a>
     <a id="nextBottom" href="#">Chương sau →</a>
@@ -223,5 +316,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/chapter.js"></script>
+<script src="js/comments.js"></script>
 </body>
 </html>
