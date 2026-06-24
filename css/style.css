@@ -788,3 +788,70 @@ body {
 .header a {
   color: #6b5268 !important;
 }
+
+/* ===== FIX PHẦN CÓ THỂ BẠN QUAN TÂM ===== */
+
+.recommend-grid,
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 170px);
+  gap: 22px;
+  align-items: start;
+}
+
+.recommend-card,
+.related-card {
+  display: flex;
+  flex-direction: column;
+  width: 170px;
+}
+
+.recommend-card img,
+.related-card img {
+  width: 170px;
+  height: 230px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 6px solid #1b2b45;
+}
+
+.recommend-card h3,
+.related-card h3 {
+  min-height: 46px;
+  margin: 10px 0 4px;
+  font-family: "Nunito", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.35;
+  font-weight: 800;
+  color: #5b4258 !important;
+}
+
+.recommend-card p,
+.related-card p,
+.recommend-card .meta,
+.related-card .meta {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #8a7686 !important;
+}
+
+@media (max-width: 650px) {
+  .recommend-grid,
+  .related-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .recommend-card,
+  .related-card {
+    width: 100%;
+  }
+
+  .recommend-card img,
+  .related-card img {
+    width: 100%;
+    height: 210px;
+  }
+}
