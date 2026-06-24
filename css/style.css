@@ -767,10 +767,34 @@ body {
 }
 
 #chapterContent,
+.chapter-content {
+  font-family: "Noto Serif", Georgia, serif !important;
+
+  font-size: 25px !important;
+  line-height: 2.15 !important;
+
+  color: #2a2130 !important;
+  font-weight: 800 !important;
+
+  text-align: justify !important;
+  text-justify: inter-word !important;
+
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+}
+
 #chapterContent p,
-.chapter-content,
 .chapter-content p {
-  color: #4f4150 !important;
+  margin: 0 0 28px !important;
+
+  color: #2a2130 !important;
+  font-weight: 800 !important;
+
+  text-align: justify !important;
+  text-justify: inter-word !important;
+
+  text-indent: 0 !important;
 }
 
 .prev-btn,
@@ -920,5 +944,37 @@ body {
     text-align: left !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
+  }
+}
+
+/* ===== CHƯƠNG ĐỌC DỄ HƠN ===== */
+
+#chapterTitle {
+  color: #9d4d87 !important;
+  font-weight: 900 !important;
+  font-size: 56px !important;
+  line-height: 1.2 !important;
+}
+
+#storyName {
+  color: #6f4c67 !important;
+  font-size: 24px !important;
+  font-weight: 800 !important;
+}
+
+@media (max-width:650px){
+
+  #chapterTitle{
+    font-size:34px !important;
+  }
+
+  #storyName{
+    font-size:18px !important;
+  }
+
+  #chapterContent,
+  .chapter-content{
+    font-size:22px !important;
+    line-height:2.05 !important;
   }
 }
