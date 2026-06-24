@@ -855,3 +855,70 @@ body {
     height: 210px;
   }
 }
+
+/* ===== FIX MOBILE STORY DETAIL ===== */
+
+@media (max-width: 650px) {
+  .detail {
+    padding: 16px 14px !important;
+    max-width: 100% !important;
+  }
+
+  .story-box {
+    padding: 16px !important;
+    border-radius: 16px !important;
+    overflow: hidden !important;
+  }
+
+  .story-header-layout,
+  .story-detail-layout {
+    display: block !important;
+  }
+
+  .story-cover,
+  .story-cover img,
+  .story-box img {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    border-radius: 14px !important;
+  }
+
+  .story-box h1,
+  #storyTitle {
+    font-size: 32px !important;
+    line-height: 1.2 !important;
+    color: #b96fa3 !important;
+    font-weight: 800 !important;
+    margin: 18px 0 12px !important;
+  }
+
+  .story-box .meta,
+  #storyAuthor,
+  #storyGenre,
+  .story-meta {
+    color: #5b4258 !important;
+    font-weight: 800 !important;
+    font-size: 17px !important;
+    line-height: 1.6 !important;
+  }
+
+  .story-description,
+  #storyDescription {
+    padding: 0 !important;
+    margin-top: 18px !important;
+    border: none !important;
+  }
+
+  .story-description p,
+  #storyDescription p,
+  .story-description {
+    font-size: 20px !important;
+    line-height: 1.8 !important;
+    color: #3b2f3f !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+}
