@@ -978,3 +978,37 @@ body {
     line-height:2.05 !important;
   }
 }
+
+/* ===== FIX CHỮ MỜ TRÊN IPHONE ===== */
+
+@media (max-width: 768px) {
+
+  .chapter-content,
+  .chapter-content p {
+
+    font-family: Georgia, "Times New Roman", serif !important;
+
+    color: #2f2433 !important;
+
+    font-weight: 700 !important;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+
+    letter-spacing: 0 !important;
+
+    text-shadow:
+      0 0 .2px rgba(47,36,51,.35);
+  }
+
+  .chapter-title{
+    font-weight: 900 !important;
+    color:#bc79ad !important;
+  }
+
+  .chapter-book{
+    font-weight:800 !important;
+    color:#7d5f83 !important;
+  }
+
+}
