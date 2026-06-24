@@ -34,6 +34,10 @@ function chapterLabel(chapter) {
     : `Chương ${chapter.chapter_order}`;
 }
 
+/* =========================
+   CHAPTER LIST
+========================= */
+
 function renderChapterPage(page) {
   currentPage = page;
 
@@ -86,8 +90,7 @@ function renderPagination(totalPages) {
 
     if (showButton) {
       html += `
-        <button
-          class="${i === currentPage ? "active" : ""}"
+        <button class="${i === currentPage ? "active" : ""}"
           onclick="renderChapterPage(${i})">
           ${i}
         </button>
@@ -103,13 +106,36 @@ function renderPagination(totalPages) {
   pagination.innerHTML = html;
 }
 
+/* =========================
+   LOAD STORY + VIEW COUNT
+========================= */
+
+async function increaseView(story) {
+  if (!story) return;
+
+  const key = `view_${story.id}`;
+  const viewed = localStorage.getItem(key);
+
+  if (viewed) return;
+
+  await db
+    .from("stories")
+    .update({
+      views: (story.views || 0) + 1
+    })
+    .eq("id", story.id);
+
+  localStorage.setItem(key, "1");
+}
+
+/* =========================
+   RECOMMENDATIONS
+========================= */
+
 async function loadRecommendations() {
   const box = document.getElementById("recommendList");
 
-  if (!currentStory) {
-    box.innerHTML = "";
-    return;
-  }
+  if (!currentStory) return;
 
   const { data } = await db
     .from("stories")
@@ -127,30 +153,34 @@ async function loadRecommendations() {
 
   box.innerHTML = list.map(story => `
     <a class="recommend-card" href="story.html?id=${story.id}">
-      ${
-        story.cover
-          ? `<img src="${story.cover}" alt="${escapeHtml(story.title)}">`
-          : `<div class="recommend-cover">${escapeHtml(story.title)}</div>`
-      }
+      ${story.cover ? `<img src="${story.cover}">` : ""}
       <h3>${escapeHtml(story.title)}</h3>
       <p>${escapeHtml(story.genre || "")}</p>
     </a>
   `).join("");
 }
 
+/* =========================
+   LOAD STORY
+========================= */
+
 async function loadStory() {
-  const { data: story, error: storyError } = await db
+  const { data: story } = await db
     .from("stories")
     .select("*")
     .eq("id", id)
     .single();
 
-  if (storyError || !story) {
-    document.getElementById("storyDetail").innerHTML = "<p>Không tìm thấy truyện.</p>";
+  if (!story) {
+    document.getElementById("storyDetail").innerHTML =
+      "<p>Không tìm thấy truyện.</p>";
     return;
   }
 
   currentStory = story;
+
+  // 👇 tăng view ở đây
+  increaseView(story);
 
   const { data: chapters } = await db
     .from("chapters")
@@ -165,18 +195,15 @@ async function loadStory() {
   document.getElementById("storyDetail").innerHTML = `
     <div class="story-box">
       <div class="story-header-layout">
-        <div class="story-left">
-          ${
-            story.cover
-              ? `<img src="${story.cover}" alt="${escapeHtml(story.title)}">`
-              : ""
-          }
 
+        <div class="story-left">
+          ${story.cover ? `<img src="${story.cover}">` : ""}
           <h1>${escapeHtml(story.title)}</h1>
 
           <p class="meta">
             Tác giả: ${escapeHtml(story.author || "")}<br>
-            Thể loại: ${escapeHtml(story.genre || "")}
+            Thể loại: ${escapeHtml(story.genre || "")}<br>
+            Lượt xem: ${story.views || 0}
           </p>
         </div>
 
@@ -187,10 +214,13 @@ async function loadStory() {
 
           ${
             allChapters.length
-              ? `<a class="read-first-btn" href="${chapterUrl(allChapters[0])}">Đọc từ đầu</a>`
+              ? `<a class="read-first-btn" href="${chapterUrl(allChapters[0])}">
+                  Đọc từ đầu
+                 </a>`
               : ""
           }
         </div>
+
       </div>
     </div>
   `;
