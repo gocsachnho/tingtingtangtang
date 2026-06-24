@@ -115,33 +115,28 @@
   .chapter-content {
   font-family: "Noto Serif", Georgia, serif;
   font-size: 22px;
-  line-height: 2.15;
+  line-height: 2.1;
 
-  color: #3b2f3f !important;
-  font-weight: 600;
-
-  text-align: justify;
-  text-justify: inter-word;
-
-  word-break: normal !important;
-  overflow-wrap: normal !important;
-  white-space: normal !important;
-
-  text-indent: 2em;
-}
-
-    .chapter-content p {
-  margin: 0 0 24px;
   color: #2f2433 !important;
   font-weight: 600;
 
   text-align: justify;
-  text-justify: inter-word;
-}
-    .chapter-content p:first-child {
-  text-indent: 0;
+  text-align-last: left;
+
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
 }
 
+.chapter-content p {
+  margin: 0 0 24px;
+
+  color: #2f2433 !important;
+  font-weight: 600;
+
+  text-align: justify;
+  text-align-last: left;
+}
     @media (max-width: 760px) {
       .header {
         grid-template-columns: 1fr;
