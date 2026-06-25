@@ -1346,3 +1346,52 @@ body {
     margin-bottom: 18px !important;
   }
 }
+
+/* FIX CUỐI CHO TRANG ĐỌC CHƯƠNG */
+
+#chapterContent,
+.chapter-content {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: 22px !important;
+  line-height: 2 !important;
+  font-weight: 700 !important;
+  color: #241c28 !important;
+
+  text-align: justify !important;
+  text-align-last: left !important;
+
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+
+  padding: 28px !important;
+}
+
+#chapterContent p,
+.chapter-content p {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+
+  text-align: justify !important;
+  text-align-last: left !important;
+
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  text-indent: 0 !important;
+
+  margin: 0 0 24px !important;
+}
+
+@media (max-width: 768px) {
+  #chapterContent,
+  .chapter-content {
+    font-size: 19px !important;
+    line-height: 1.95 !important;
+    font-weight: 700 !important;
+    padding: 18px !important;
+  }
+}
