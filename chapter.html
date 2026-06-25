@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đọc chương - Ting Ting Tang Tang</title>
 
+  <meta name="monetag" content="3a39f7c8a45da85d087850eda27ef662">
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const raw =
+        params.get("chapter") ||
+        params.get("id") ||
+        params.get("c") ||
+        "";
+
+      const chapterNumber = parseInt(String(raw).replace(/\D/g, ""), 10);
+
+      if (chapterNumber && chapterNumber % 30 === 0) {
+        const s = document.createElement("script");
+        s.src = "https://quge5.com/88/tag.min.js";
+        s.async = true;
+        s.setAttribute("data-zone", "253157");
+        s.setAttribute("data-cfasync", "false");
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700;800&family=Nunito:wght@400;600;700;800&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
