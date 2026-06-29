@@ -1395,3 +1395,28 @@ body {
     padding: 18px !important;
   }
 }
+
+body,
+.story-content,
+.chapter-content,
+.post-body,
+p,
+div {
+  font-family: Arial, "Roboto", "Noto Sans", sans-serif !important;
+  font-weight: 400 !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+}
+
+.chapter-content,
+.post-body {
+  font-size: 20px !important;
+  line-height: 1.9 !important;
+}
+
+.chapter-content b,
+.chapter-content strong,
+.post-body b,
+.post-body strong {
+  font-weight: 400 !important;
+}
