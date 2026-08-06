@@ -4,11 +4,9 @@
   <meta charset="UTF-8">
   <title>Ting Ting Tang Tang</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <link rel="stylesheet" href="./css/style.css?v=20260806">
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700;800&family=Nunito:wght@400;500;600;700;800&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css?v=20260806-search">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <meta name="monetag" content="3a39f7c8a45da85d087850eda27ef662">
 </head>
 
@@ -41,8 +39,20 @@
     </div>
   </nav>
 
-  <div class="search-wrap">
-    <input id="searchInput" placeholder="Tìm truyện...">
+  <div class="search-wrap" id="searchWrap">
+    <label class="sr-only" for="searchInput">Tìm truyện</label>
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Tìm truyện..."
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Tìm truyện"
+      aria-autocomplete="list"
+      aria-controls="searchResults"
+      aria-expanded="false"
+    >
+    <div id="searchResults" class="search-results" role="listbox" hidden></div>
   </div>
 </header>
 
@@ -90,7 +100,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./js/supabase.js"></script>
-<script src="./js/app.js?v=20260806"></script>
+<script src="./js/app.js?v=20260806-search"></script>
 
 </body>
 </html>
