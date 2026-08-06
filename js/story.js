@@ -139,7 +139,7 @@ async function loadRecommendations() {
 
   const { data } = await db
     .from("stories")
-    .select("*")
+    .select("id,title,genre,cover")
     .eq("genre", currentStory.genre)
     .neq("id", currentStory.id)
     .limit(12);
@@ -153,7 +153,7 @@ async function loadRecommendations() {
 
   box.innerHTML = list.map(story => `
     <a class="recommend-card" href="story.html?id=${story.id}">
-      ${story.cover ? `<img src="${story.cover}">` : ""}
+      ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(story.title)}" loading="lazy" decoding="async">` : ""}
       <h3>${escapeHtml(story.title)}</h3>
       <p>${escapeHtml(story.genre || "")}</p>
     </a>
@@ -167,7 +167,7 @@ async function loadRecommendations() {
 async function loadStory() {
   const { data: story } = await db
     .from("stories")
-    .select("*")
+    .select("id,title,author,genre,cover,views,description")
     .eq("id", id)
     .single();
 
@@ -184,7 +184,7 @@ async function loadStory() {
 
   const { data: chapters } = await db
     .from("chapters")
-    .select("*")
+    .select("id,story_id,chapter_order,title,shortlink")
     .eq("story_id", story.id)
     .order("chapter_order", { ascending: true });
 
@@ -197,7 +197,7 @@ async function loadStory() {
       <div class="story-header-layout">
 
         <div class="story-left">
-          ${story.cover ? `<img src="${story.cover}">` : ""}
+          ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(story.title)}" loading="lazy" decoding="async">` : ""}
           <h1>${escapeHtml(story.title)}</h1>
 
           <p class="meta">
