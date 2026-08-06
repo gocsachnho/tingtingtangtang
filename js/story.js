@@ -18,7 +18,6 @@ function formatDescription(text) {
   return String(text || "")
     .replace(/\r/g, "")
     .replace(/\\n/g, "\n")
-    .replace(/([.!?…])\s+/g, "$1\n\n")
     .split(/\n+/)
     .map(line => line.trim())
     .filter(Boolean)
