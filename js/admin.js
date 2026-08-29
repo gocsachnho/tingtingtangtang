@@ -1,6 +1,8 @@
 let stories = [];
 let chapters = [];
 let currentStoryId = "";
+let paywalls = [];
+let paymentOrders = [];
 
 function cleanVietnameseText(text) {
   const value = String(text == null ? "" : text);
@@ -91,8 +93,20 @@ async function loadAdminData() {
     .order("story_id", { ascending: true })
     .order("chapter_order", { ascending: true });
 
+  const paywallResult = await db
+    .from("story_paywalls")
+    .select("*");
+
+  const paymentResult = await db
+    .from("payment_orders")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
   stories = storyResult.data || [];
   chapters = chapterResult.data || [];
+  paywalls = paywallResult.data || [];
+  paymentOrders = paymentResult.data || [];
 
   if (!currentStoryId && stories.length) {
     currentStoryId = stories[0].id;
@@ -101,6 +115,8 @@ async function loadAdminData() {
   renderStorySelect();
   renderStories();
   renderChapters();
+  renderPaywallSelect();
+  renderPaymentOrders();
 }
 
 function chapterLabel(chapter) {
@@ -165,20 +181,25 @@ function renderChapters() {
     return;
   }
 
+  const pw = paywalls.find(p => p.story_id === currentStoryId);
+
   box.innerHTML = `
-    <h3 style="color:#ffd369;margin-bottom:15px;">Danh sách chương của: ${selectedStory.title}</h3>
-    ${filteredChapters.map(chapter => `
+    <h3 style="color:#b96fa3;margin-bottom:15px;">Danh sách chương của: ${selectedStory.title}</h3>
+    ${filteredChapters.map(chapter => {
+      const isPaid = !!pw?.enabled && Number(chapter.chapter_order) > Number(pw.free_until || 0);
+      return `
       <div class="admin-item">
         <div>
-          <b>${chapterLabel(chapter)}</b>
-          <p class="meta">${chapter.shortlink ? "Có link rút gọn" : "Không có link rút gọn"}</p>
+          <b>${isPaid ? "🔒 " : ""}${chapterLabel(chapter)}</b>
+          <p class="meta">${isPaid ? "Trả phí" : "Miễn phí"} · ${chapter.shortlink ? "Có link rút gọn" : "Không có link rút gọn"}</p>
         </div>
         <div>
           <button type="button" onclick="editChapter(${chapter.id})">Sửa</button>
           <button type="button" class="delete-btn" onclick="deleteChapter(${chapter.id})">Xóa</button>
         </div>
       </div>
-    `).join("")}
+    `;
+    }).join("")}
   `;
 }
 
@@ -426,3 +447,157 @@ if (normalizeAllBtn) {
 }
 
 checkLogin();
+
+/* =========================
+   KHÓA CHƯƠNG / THU PHÍ
+========================= */
+
+function renderPaywallSelect() {
+  const select = document.getElementById("paywallStorySelect");
+  if (!select) return;
+
+  select.innerHTML = stories.map(story => `
+    <option value="${story.id}">${cleanVietnameseText(story.title)}</option>
+  `).join("");
+
+  if (currentStoryId && stories.some(s => s.id === currentStoryId)) {
+    select.value = currentStoryId;
+  }
+
+  select.onchange = () => loadPaywallForm(select.value);
+  loadPaywallForm(select.value);
+}
+
+function loadPaywallForm(storyId) {
+  const form = document.getElementById("paywallForm");
+  if (!form || !storyId) return;
+
+  const pw = paywalls.find(p => p.story_id === storyId);
+
+  form.elements.story_id.value = storyId;
+  form.elements.enabled.checked = !!pw?.enabled;
+  form.elements.free_until.value = pw?.free_until ?? 50;
+  form.elements.price_vnd.value = pw?.price_vnd ?? 29000;
+  form.elements.bank_name.value = pw?.bank_name || "";
+  form.elements.bank_account.value = pw?.bank_account || "";
+  form.elements.account_name.value = pw?.account_name || "";
+  form.elements.qr_url.value = pw?.qr_url || "";
+  form.elements.transfer_prefix.value = pw?.transfer_prefix || "TTTT";
+}
+
+const paywallForm = document.getElementById("paywallForm");
+if (paywallForm) {
+  paywallForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    const storyId = fd.get("story_id");
+
+    const payload = {
+      story_id: storyId,
+      enabled: this.elements.enabled.checked,
+      free_until: Number(fd.get("free_until") || 0),
+      price_vnd: Number(fd.get("price_vnd") || 0),
+      bank_name: cleanVietnameseText(fd.get("bank_name") || ""),
+      bank_account: String(fd.get("bank_account") || "").trim(),
+      account_name: cleanVietnameseText(fd.get("account_name") || ""),
+      qr_url: String(fd.get("qr_url") || "").trim(),
+      transfer_prefix: String(fd.get("transfer_prefix") || "TTTT").trim().toUpperCase()
+    };
+
+    const status = document.getElementById("paywallSaveStatus");
+    status.textContent = "Đang lưu...";
+
+    const { error } = await db.from("story_paywalls").upsert(payload);
+    if (error) {
+      status.textContent = "Lỗi: " + error.message;
+      return;
+    }
+
+    currentStoryId = storyId;
+    status.textContent = "Đã lưu thiết lập thu phí.";
+    await loadAdminData();
+  });
+}
+
+/* =========================
+   ĐƠN THANH TOÁN
+========================= */
+
+function paymentStatusLabel(status) {
+  if (status === "paid") return "✅ Đã nhận tiền";
+  if (status === "rejected") return "❌ Từ chối";
+  return "⏳ Chờ xác nhận";
+}
+
+function renderPaymentOrders() {
+  const box = document.getElementById("paymentOrderList");
+  if (!box) return;
+
+  if (!paymentOrders.length) {
+    box.innerHTML = `<p class="meta">Chưa có đơn thanh toán.</p>`;
+    return;
+  }
+
+  box.innerHTML = paymentOrders.map(order => {
+    const story = stories.find(s => s.id === order.story_id);
+    const created = order.created_at
+      ? new Date(order.created_at).toLocaleString("vi-VN")
+      : "";
+
+    return `
+      <div class="admin-item payment-order ${order.status}">
+        <div>
+          <b>${paymentStatusLabel(order.status)} · ${order.order_code}</b>
+          <p class="meta">
+            Truyện: ${cleanVietnameseText(story?.title || order.story_id)}<br>
+            Số tiền: ${Number(order.amount_vnd || 0).toLocaleString("vi-VN")}đ<br>
+            Tạo lúc: ${created}
+            ${order.unlock_code ? `<br>Mã mở khóa: <b>${order.unlock_code}</b>` : ""}
+          </p>
+        </div>
+        <div class="payment-order-actions">
+          ${order.status === "pending" ? `
+            <button type="button" onclick="approvePayment('${order.order_code}')">Đã nhận tiền</button>
+            <button type="button" class="delete-btn" onclick="rejectPayment('${order.order_code}')">Từ chối</button>
+          ` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function approvePayment(orderCode) {
+  if (!confirm(`Xác nhận đã nhận tiền cho đơn ${orderCode}?`)) return;
+
+  const { data, error } = await db.rpc("tttt_admin_approve_payment", {
+    p_order_code: orderCode
+  });
+
+  if (error) {
+    alert("Lỗi xác nhận: " + error.message);
+    return;
+  }
+
+  alert("Đã xác nhận. Mã mở khóa: " + (data?.unlock_code || ""));
+  await loadAdminData();
+}
+
+async function rejectPayment(orderCode) {
+  if (!confirm(`Từ chối đơn ${orderCode}?`)) return;
+
+  const { error } = await db.rpc("tttt_admin_reject_payment", {
+    p_order_code: orderCode
+  });
+
+  if (error) {
+    alert("Lỗi: " + error.message);
+    return;
+  }
+
+  await loadAdminData();
+}
+
+const refreshPaymentsBtn = document.getElementById("refreshPaymentsBtn");
+if (refreshPaymentsBtn) {
+  refreshPaymentsBtn.addEventListener("click", loadAdminData);
+}
