@@ -2,6 +2,13 @@ let stories = [];
 let chapters = [];
 let currentStoryId = "";
 
+function cleanVietnameseText(text) {
+  const value = String(text == null ? "" : text);
+  return typeof window.normalizeVietnameseText === "function"
+    ? window.normalizeVietnameseText(value)
+    : value.normalize("NFC");
+}
+
 function setupTabs() {
   document.querySelectorAll(".admin-tab").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -97,7 +104,7 @@ async function loadAdminData() {
 }
 
 function chapterLabel(chapter) {
-  const name = chapter.title && chapter.title.trim();
+  const name = cleanVietnameseText(chapter.title || "").trim();
   return name
     ? `Chương ${chapter.chapter_order}: ${name}`
     : `Chương ${chapter.chapter_order}`;
@@ -108,7 +115,7 @@ function renderStorySelect() {
 
   select.innerHTML = stories.map(story => `
     <option value="${story.id}" ${story.id === currentStoryId ? "selected" : ""}>
-      ${story.title}
+      ${cleanVietnameseText(story.title)}
     </option>
   `).join("");
 
@@ -125,8 +132,8 @@ function renderStories() {
     return `
       <div class="admin-item">
         <div>
-          <b>${story.title}</b>
-          <p class="meta">${story.author || ""} | ${story.genre || ""} | ${count} chương</p>
+          <b>${cleanVietnameseText(story.title)}</b>
+          <p class="meta">${cleanVietnameseText(story.author || "")} | ${cleanVietnameseText(story.genre || "")} | ${count} chương</p>
         </div>
         <div>
           <button type="button" onclick="editStory('${story.id}')">Sửa</button>
@@ -189,11 +196,11 @@ document.getElementById("storyForm").addEventListener("submit", async function (
 
   const storyData = {
     id: storyId,
-    title: fd.get("title"),
-    author: fd.get("author"),
-    genre: fd.get("genre"),
+    title: cleanVietnameseText(fd.get("title")),
+    author: cleanVietnameseText(fd.get("author")),
+    genre: cleanVietnameseText(fd.get("genre")),
     cover: cover,
-    description: fd.get("description")
+    description: cleanVietnameseText(fd.get("description"))
   };
 
   const { error } = await db
@@ -220,11 +227,11 @@ function editStory(id) {
   currentStoryId = id;
 
   form.elements.id.value = story.id;
-  form.elements.title.value = story.title || "";
-  form.elements.author.value = story.author || "";
-  form.elements.genre.value = story.genre || "Khác";
+  form.elements.title.value = cleanVietnameseText(story.title || "");
+  form.elements.author.value = cleanVietnameseText(story.author || "");
+  form.elements.genre.value = cleanVietnameseText(story.genre || "Khác");
   form.elements.cover.value = story.cover || "";
-  form.elements.description.value = story.description || "";
+  form.elements.description.value = cleanVietnameseText(story.description || "");
 
   renderStorySelect();
   renderChapters();
@@ -275,8 +282,8 @@ document.getElementById("chapterForm").addEventListener("submit", async function
   const chapterData = {
     story_id: selectedStoryId,
     chapter_order: chapterOrder,
-    title: fd.get("title") || "",
-    content: fd.get("content"),
+    title: cleanVietnameseText(fd.get("title") || ""),
+    content: cleanVietnameseText(fd.get("content")),
     shortlink: fd.get("shortlink") || ""
   };
 
@@ -322,8 +329,8 @@ function editChapter(id) {
   form.elements.id.value = chapter.id;
   form.elements.story_id.value = chapter.story_id;
   form.elements.chapter_order.value = chapter.chapter_order;
-  form.elements.title.value = chapter.title || "";
-  form.elements.content.value = chapter.content || "";
+  form.elements.title.value = cleanVietnameseText(chapter.title || "");
+  form.elements.content.value = cleanVietnameseText(chapter.content || "");
   form.elements.shortlink.value = chapter.shortlink || "";
 
   renderStorySelect();
@@ -347,6 +354,75 @@ async function deleteChapter(id) {
   }
 
   await loadAdminData();
+}
+
+async function runInBatches(items, worker, size = 20) {
+  for (let i = 0; i < items.length; i += size) {
+    const batch = items.slice(i, i + size);
+    const results = await Promise.all(batch.map(worker));
+    const failed = results.find(result => result && result.error);
+    if (failed) throw failed.error;
+  }
+}
+
+async function normalizeAllDatabaseText() {
+  const button = document.getElementById("normalizeAllBtn");
+  const status = document.getElementById("normalizeStatus");
+
+  if (!button || !status) return;
+  if (!confirm("Chuẩn hóa lỗi chữ tiếng Việt cho toàn bộ truyện và chương hiện có?")) return;
+
+  button.disabled = true;
+  status.textContent = "Đang kiểm tra và chuẩn hóa dữ liệu...";
+
+  try {
+    const storyChanges = stories
+      .map(story => {
+        const patch = {
+          title: cleanVietnameseText(story.title || ""),
+          author: cleanVietnameseText(story.author || ""),
+          genre: cleanVietnameseText(story.genre || ""),
+          description: cleanVietnameseText(story.description || "")
+        };
+        const changed = Object.keys(patch).some(key => String(story[key] || "") !== patch[key]);
+        return changed ? { id: story.id, patch } : null;
+      })
+      .filter(Boolean);
+
+    const chapterChanges = chapters
+      .map(chapter => {
+        const patch = {
+          title: cleanVietnameseText(chapter.title || ""),
+          content: cleanVietnameseText(chapter.content || "")
+        };
+        const changed = Object.keys(patch).some(key => String(chapter[key] || "") !== patch[key]);
+        return changed ? { id: chapter.id, patch } : null;
+      })
+      .filter(Boolean);
+
+    await runInBatches(storyChanges, item =>
+      db.from("stories").update(item.patch).eq("id", item.id)
+    );
+
+    await runInBatches(chapterChanges, item =>
+      db.from("chapters").update(item.patch).eq("id", item.id)
+    );
+
+    await loadAdminData();
+    status.textContent = `Hoàn tất: đã chuẩn hóa ${storyChanges.length} truyện và ${chapterChanges.length} chương.`;
+    alert("Đã chuẩn hóa dữ liệu chữ tiếng Việt.");
+  } catch (error) {
+    console.error(error);
+    status.textContent = "Có lỗi khi cập nhật. Dữ liệu chưa sửa hết.";
+    alert("Lỗi chuẩn hóa dữ liệu: " + (error?.message || error));
+  } finally {
+    button.disabled = false;
+  }
+}
+
+const normalizeAllBtn = document.getElementById("normalizeAllBtn");
+if (normalizeAllBtn) {
+  normalizeAllBtn.addEventListener("click", normalizeAllDatabaseText);
 }
 
 checkLogin();
