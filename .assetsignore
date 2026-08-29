@@ -1,10 +1,17 @@
-# Không public code backend / secret setup files
+node_modules/
+**/node_modules/
+.wrangler/
+.git/
+.github/
+
 src/
 wrangler.jsonc
 package.json
 package-lock.json
+bun.lock
+bun.lockb
 .assetsignore
-.git*
+
 *.sql
 *.txt
 CNAME
