@@ -1827,3 +1827,35 @@ body {
 .dropbtn {
   padding: 8px 2px !important;
 }
+
+
+/* =========================================================
+   FIX FONT KHU "CÓ THỂ BẠN QUAN TÂM"
+   Đồng bộ font với giao diện website, không dùng font serif của nội dung truyện.
+========================================================= */
+.recommend-section,
+.recommend-list,
+.recommend-card,
+.recommend-card h3,
+.recommend-card p,
+.recommend-card a {
+  font-family: "Nunito", Arial, sans-serif !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+}
+
+.recommend-card h3 {
+  font-size: 18px !important;
+  line-height: 1.35 !important;
+  font-weight: 800 !important;
+  color: #5f4459 !important;
+  margin: 12px 0 4px !important;
+}
+
+.recommend-card p {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+  color: #8a7584 !important;
+  margin: 0 !important;
+}
