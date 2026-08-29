@@ -7,6 +7,13 @@ let allChapters = [];
 let currentPage = 1;
 let currentStory = null;
 
+function cleanVietnameseText(text) {
+  const value = String(text == null ? "" : text);
+  return typeof window.normalizeVietnameseText === "function"
+    ? window.normalizeVietnameseText(value)
+    : value.normalize("NFC");
+}
+
 function escapeHtml(text) {
   return String(text || "")
     .replace(/&/g, "&amp;")
@@ -15,9 +22,10 @@ function escapeHtml(text) {
 }
 
 function formatDescription(text) {
-  return String(text || "")
+  return cleanVietnameseText(text)
     .replace(/\r/g, "")
     .replace(/\\n/g, "\n")
+    .replace(/([.!?…])\s+/g, "$1\n\n")
     .split(/\n+/)
     .map(line => line.trim())
     .filter(Boolean)
@@ -26,7 +34,7 @@ function formatDescription(text) {
 }
 
 function chapterLabel(chapter) {
-  const name = chapter.title && chapter.title.trim();
+  const name = cleanVietnameseText(chapter.title || "").trim();
 
   return name
     ? `Chương ${chapter.chapter_order}: ${name}`
@@ -47,7 +55,7 @@ function renderChapterPage(page) {
 
   document.getElementById("chapterList").innerHTML = pageChapters.map(chapter => `
     <a class="chapter-row" href="${chapterUrl(chapter)}">
-      <span>${chapterLabel(chapter)}</span>
+      <span>${escapeHtml(chapterLabel(chapter))}</span>
       <span>Đọc →</span>
     </a>
   `).join("");
@@ -138,7 +146,7 @@ async function loadRecommendations() {
 
   const { data } = await db
     .from("stories")
-    .select("id,title,genre,cover")
+    .select("*")
     .eq("genre", currentStory.genre)
     .neq("id", currentStory.id)
     .limit(12);
@@ -150,13 +158,18 @@ async function loadRecommendations() {
     return;
   }
 
-  box.innerHTML = list.map(story => `
-    <a class="recommend-card" href="story.html?id=${story.id}">
-      ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(story.title)}" loading="lazy" decoding="async">` : ""}
-      <h3>${escapeHtml(story.title)}</h3>
-      <p>${escapeHtml(story.genre || "")}</p>
-    </a>
-  `).join("");
+  box.innerHTML = list.map(story => {
+    const title = cleanVietnameseText(story.title || "");
+    const genre = cleanVietnameseText(story.genre || "");
+
+    return `
+      <a class="recommend-card" href="story.html?id=${encodeURIComponent(story.id)}">
+        ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(title)}">` : ""}
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(genre)}</p>
+      </a>
+    `;
+  }).join("");
 }
 
 /* =========================
@@ -166,7 +179,7 @@ async function loadRecommendations() {
 async function loadStory() {
   const { data: story } = await db
     .from("stories")
-    .select("id,title,author,genre,cover,views,description")
+    .select("*")
     .eq("id", id)
     .single();
 
@@ -178,30 +191,33 @@ async function loadStory() {
 
   currentStory = story;
 
-  // 👇 tăng view ở đây
   increaseView(story);
 
   const { data: chapters } = await db
     .from("chapters")
-    .select("id,story_id,chapter_order,title,shortlink")
+    .select("*")
     .eq("story_id", story.id)
     .order("chapter_order", { ascending: true });
 
   allChapters = chapters || [];
 
-  document.title = story.title;
+  const title = cleanVietnameseText(story.title || "");
+  const author = cleanVietnameseText(story.author || "");
+  const genre = cleanVietnameseText(story.genre || "");
+
+  document.title = title;
 
   document.getElementById("storyDetail").innerHTML = `
     <div class="story-box">
       <div class="story-header-layout">
 
         <div class="story-left">
-          ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(story.title)}" loading="lazy" decoding="async">` : ""}
-          <h1>${escapeHtml(story.title)}</h1>
+          ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(title)}">` : ""}
+          <h1>${escapeHtml(title)}</h1>
 
           <p class="meta">
-            Tác giả: ${escapeHtml(story.author || "")}<br>
-            Thể loại: ${escapeHtml(story.genre || "")}<br>
+            Tác giả: ${escapeHtml(author)}<br>
+            Thể loại: ${escapeHtml(genre)}<br>
             Lượt xem: ${story.views || 0}
           </p>
         </div>
