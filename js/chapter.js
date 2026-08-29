@@ -2,6 +2,10 @@ const params = new URLSearchParams(location.search);
 const storyId = params.get("id");
 const chapterOrder = Number(params.get("chapter") || 1);
 
+let paymentAutoPollTimer = null;
+let paymentAutoPollStartedAt = 0;
+let paymentCheckBusy = false;
+
 function cleanVietnameseText(text) {
   const value = String(text == null ? "" : text);
   return typeof window.normalizeVietnameseText === "function"
@@ -122,9 +126,10 @@ async function createPaymentOrder() {
     });
 
     renderPaymentDetails(info);
-    paywallMessage("Mã thanh toán đã tạo. Sau khi chuyển khoản, bấm “Kiểm tra thanh toán”.", "ok");
+    paywallMessage("Mã thanh toán đã tạo. Sau khi chuyển khoản, hệ thống sẽ tự mở khóa.", "ok");
     const checkBtn = document.getElementById("checkPaymentBtn");
     if (checkBtn) checkBtn.style.display = "inline-flex";
+    startAutoPaymentCheck();
   } catch (err) {
     console.error(err);
     paywallMessage("Không tạo được mã thanh toán. " + (err.message || ""), "error");
@@ -133,16 +138,21 @@ async function createPaymentOrder() {
   }
 }
 
-async function checkPayment() {
+async function checkPayment(options = {}) {
+  const silent = !!options.silent;
+
+  if (paymentCheckBusy) return false;
+
   const draft = ttttGetPaymentDraft(storyId);
   if (!draft?.order_code || !draft?.claim_token) {
-    paywallMessage("Chưa có mã thanh toán trên thiết bị này.", "error");
-    return;
+    if (!silent) paywallMessage("Chưa có mã thanh toán trên thiết bị này.", "error");
+    return false;
   }
 
   const btn = document.getElementById("checkPaymentBtn");
-  if (btn) btn.disabled = true;
-  paywallMessage("Đang kiểm tra thanh toán...");
+  paymentCheckBusy = true;
+  if (btn && !silent) btn.disabled = true;
+  if (!silent) paywallMessage("Đang kiểm tra thanh toán...");
 
   try {
     const result = await ttttRpc("tttt_check_payment", {
@@ -153,24 +163,75 @@ async function checkPayment() {
     if (!result?.ok) throw new Error(result?.message || "Không kiểm tra được.");
 
     if (result.status === "paid" && result.unlock_code) {
+      stopAutoPaymentCheck();
       ttttSaveUnlockCode(storyId, result.unlock_code);
-      paywallMessage(`Đã thanh toán. Mã mở khóa: ${result.unlock_code}`, "ok");
-      setTimeout(() => location.reload(), 700);
-      return;
+      paywallMessage(
+        `Thanh toán thành công! Mã mở khóa: ${result.unlock_code}. Đang mở truyện...`,
+        "ok"
+      );
+      setTimeout(() => location.reload(), 900);
+      return true;
     }
 
     if (result.status === "rejected") {
+      stopAutoPaymentCheck();
       paywallMessage("Giao dịch đã bị từ chối. Vui lòng liên hệ chủ website.", "error");
+      return false;
+    }
+
+    if (!silent) {
+      paywallMessage("Chưa thấy tiền vào. Hệ thống đang tự kiểm tra...", "pending");
+    }
+
+    return false;
+  } catch (err) {
+    console.error(err);
+    if (!silent) {
+      paywallMessage("Không kiểm tra được thanh toán. " + (err.message || ""), "error");
+    }
+    return false;
+  } finally {
+    paymentCheckBusy = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+
+function stopAutoPaymentCheck() {
+  if (paymentAutoPollTimer) {
+    clearInterval(paymentAutoPollTimer);
+    paymentAutoPollTimer = null;
+  }
+}
+
+function startAutoPaymentCheck() {
+  const draft = ttttGetPaymentDraft(storyId);
+  if (!draft?.order_code || !draft?.claim_token) return;
+
+  stopAutoPaymentCheck();
+  paymentAutoPollStartedAt = Date.now();
+
+  paywallMessage(
+    `Đang chờ thanh toán tự động cho đơn ${draft.order_code}. Sau khi tiền vào, truyện sẽ tự mở.`,
+    "pending"
+  );
+
+  // Kiểm tra lần đầu sau 2 giây.
+  setTimeout(() => checkPayment({ silent: true }), 2000);
+
+  paymentAutoPollTimer = setInterval(async () => {
+    // Dừng sau 10 phút để tránh gọi API mãi nếu khách chưa chuyển.
+    if (Date.now() - paymentAutoPollStartedAt > 10 * 60 * 1000) {
+      stopAutoPaymentCheck();
+      paywallMessage(
+        "Chưa ghi nhận thanh toán. Bạn có thể bấm “Kiểm tra thanh toán” sau khi chuyển khoản.",
+        "pending"
+      );
       return;
     }
 
-    paywallMessage("Chưa ghi nhận thanh toán. Nếu bạn vừa chuyển khoản, vui lòng chờ chủ website xác nhận.", "pending");
-  } catch (err) {
-    console.error(err);
-    paywallMessage("Không kiểm tra được thanh toán. " + (err.message || ""), "error");
-  } finally {
-    if (btn) btn.disabled = false;
-  }
+    await checkPayment({ silent: true });
+  }, 4000);
 }
 
 async function useExistingUnlockCode() {
@@ -252,7 +313,8 @@ function renderLockedBox(chapterData) {
   document.getElementById("useUnlockBtn").addEventListener("click", useExistingUnlockCode);
 
   if (savedDraft) {
-    paywallMessage(`Bạn đã có đơn ${savedDraft.order_code}. Bấm “Kiểm tra thanh toán” sau khi chuyển khoản.`, "pending");
+    paywallMessage(`Bạn đã có đơn ${savedDraft.order_code}. Hệ thống đang tự kiểm tra thanh toán.`, "pending");
+    startAutoPaymentCheck();
   }
 }
 
