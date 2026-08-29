@@ -137,6 +137,13 @@
           </section>
 
           <section class="admin-box">
+            <h2>Chuẩn hóa lỗi chữ tiếng Việt</h2>
+            <p class="meta">Dùng một lần sau khi cập nhật website để sửa các lỗi kiểu “Hiế u”, “đế n”, “khắ p” trong dữ liệu cũ.</p>
+            <button type="button" id="normalizeAllBtn">Chuẩn hóa toàn bộ dữ liệu chữ</button>
+            <p class="meta" id="normalizeStatus"></p>
+          </section>
+
+          <section class="admin-box">
             <h2>Danh sách chương</h2>
             <div id="adminChapterList"></div>
           </section>
@@ -175,6 +182,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
+<script src="js/text-normalizer.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>
