@@ -7,7 +7,18 @@
 
   <link rel="stylesheet" href="./css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<meta name="monetag" content="3a39f7c8a45da85d087850eda27ef662">
+
+  <script>
+    // Dọn service worker quảng cáo cũ một lần trên trình duyệt đã từng truy cập website.
+    if ("serviceWorker" in navigator && !localStorage.getItem("tttt_ads_sw_cleaned_v1")) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+      }).finally(function () {
+        localStorage.setItem("tttt_ads_sw_cleaned_v1", "1");
+      });
+    }
+  </script>
+
 </head>
 
 <body>
