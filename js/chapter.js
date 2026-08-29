@@ -2,76 +2,92 @@ const params = new URLSearchParams(location.search);
 const storyId = params.get("id");
 const chapterOrder = Number(params.get("chapter") || 1);
 
+function cleanVietnameseText(text) {
+  const value = String(text == null ? "" : text);
+  return typeof window.normalizeVietnameseText === "function"
+    ? window.normalizeVietnameseText(value)
+    : value.normalize("NFC");
+}
+
 function escapeHtml(text) {
-  return String(text ?? "")
+  return String(text || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
 function chapterLabel(chapter) {
-  const name = chapter?.title?.trim();
-  return name ? `Chương ${chapter.chapter_order}: ${name}` : `Chương ${chapter.chapter_order}`;
+  const name = cleanVietnameseText(chapter.title || "").trim();
+  return name
+    ? `Chương ${chapter.chapter_order}: ${name}`
+    : `Chương ${chapter.chapter_order}`;
 }
 
 function splitParagraphs(text) {
-  return String(text || "")
+  return cleanVietnameseText(text)
     .replace(/\r/g, "")
     .replace(/\\n/g, "\n")
-    .split(/\n+/)
+    .split(/\n{2,}|\n/)
     .map(line => line.trim())
     .filter(Boolean);
 }
 
 function setNav(elId, chapter) {
   const el = document.getElementById(elId);
-  if (!el) return;
+
   if (!chapter) {
     el.href = "#";
     el.classList.add("disabled");
-    el.setAttribute("aria-disabled", "true");
     return;
   }
+
   el.href = chapterUrl(chapter);
   el.classList.remove("disabled");
-  el.removeAttribute("aria-disabled");
 }
 
 async function loadChapter() {
-  if (!storyId || !Number.isFinite(chapterOrder)) {
-    document.getElementById("chapterTitle").textContent = "Đường dẫn chương không hợp lệ";
-    return;
+  const { data: story, error: storyError } = await db
+    .from("stories")
+    .select("*")
+    .eq("id", storyId)
+    .single();
+
+  const { data: chapters, error: chaptersError } = await db
+    .from("chapters")
+    .select("*")
+    .eq("story_id", storyId)
+    .order("chapter_order", { ascending: true });
+
+  if (storyError || chaptersError) {
+    console.error("Lỗi tải dữ liệu chương:", storyError || chaptersError);
   }
 
-  const [storyResult, chapterResult, prevResult, nextResult] = await Promise.all([
-    db.from("stories").select("id,title").eq("id", storyId).maybeSingle(),
-    db.from("chapters").select("id,story_id,chapter_order,title,content,shortlink").eq("story_id", storyId).eq("chapter_order", chapterOrder).maybeSingle(),
-    db.from("chapters").select("id,story_id,chapter_order,title,shortlink").eq("story_id", storyId).lt("chapter_order", chapterOrder).order("chapter_order", { ascending: false }).limit(1).maybeSingle(),
-    db.from("chapters").select("id,story_id,chapter_order,title,shortlink").eq("story_id", storyId).gt("chapter_order", chapterOrder).order("chapter_order", { ascending: true }).limit(1).maybeSingle()
-  ]);
+  const chapterList = chapters || [];
+  const chapter = chapterList.find(c => Number(c.chapter_order) === chapterOrder);
 
-  const story = storyResult.data;
-  const chapter = chapterResult.data;
   if (!story || !chapter) {
     document.getElementById("chapterTitle").textContent = "Không tìm thấy chương";
     return;
   }
 
-  document.title = `${chapterLabel(chapter)} - ${story.title}`;
+  const index = chapterList.findIndex(c => c.id === chapter.id);
+  const prevChapter = chapterList[index - 1];
+  const nextChapter = chapterList[index + 1];
+  const cleanStoryTitle = cleanVietnameseText(story.title || "");
+
+  document.title = `${chapterLabel(chapter)} - ${cleanStoryTitle}`;
   document.getElementById("chapterTitle").textContent = chapterLabel(chapter);
-  document.getElementById("storyName").textContent = story.title;
+  document.getElementById("storyName").textContent = cleanStoryTitle;
   document.getElementById("backStory").href = `story.html?id=${encodeURIComponent(story.id)}`;
+
   document.getElementById("chapterContent").innerHTML = splitParagraphs(chapter.content)
-    .map(paragraph => `<p>${escapeHtml(paragraph)}</p>`)
+    .map(p => `<p>${escapeHtml(p)}</p>`)
     .join("");
 
-  setNav("prevTop", prevResult.data);
-  setNav("prevBottom", prevResult.data);
-  setNav("nextTop", nextResult.data);
-  setNav("nextBottom", nextResult.data);
+  setNav("prevTop", prevChapter);
+  setNav("prevBottom", prevChapter);
+  setNav("nextTop", nextChapter);
+  setNav("nextBottom", nextChapter);
 }
 
-loadChapter().catch(error => {
-  console.error("Lỗi tải chương:", error);
-  document.getElementById("chapterTitle").textContent = "Không tải được chương";
-});
+loadChapter();
