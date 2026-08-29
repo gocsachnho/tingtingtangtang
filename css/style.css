@@ -1464,3 +1464,13 @@ body {
     font-weight: 600 !important;
   }
 }
+/* CĂN ĐỀU HAI LỀ NỘI DUNG TRUYỆN */
+.chapter-content,
+.chapter-content p,
+.story-content,
+.story-content p {
+    text-align: justify !important;
+    text-justify: inter-word;
+    letter-spacing: 0 !important;
+    word-spacing: normal !important;
+}
