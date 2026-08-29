@@ -553,8 +553,6 @@ function renderPaymentOrders() {
             Số tiền: ${Number(order.amount_vnd || 0).toLocaleString("vi-VN")}đ<br>
             Tạo lúc: ${created}
             ${order.unlock_code ? `<br>Mã mở khóa: <b>${order.unlock_code}</b>` : ""}
-            ${order.payment_provider ? `<br>Xác nhận: <b>${order.payment_provider.toUpperCase()}</b>` : ""}
-            ${order.payment_reference ? `<br>Tham chiếu NH: ${order.payment_reference}` : ""}
           </p>
         </div>
         <div class="payment-order-actions">
