@@ -1,0 +1,10 @@
+# Không public code backend / secret setup files
+src/
+wrangler.jsonc
+package.json
+package-lock.json
+.assetsignore
+.git*
+*.sql
+*.txt
+CNAME
