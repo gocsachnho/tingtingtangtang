@@ -162,13 +162,15 @@ async function loadHome() {
     .select("*")
     .order("created_at", { ascending: false });
 
-  const chapterResult = await db
-    .from("chapters")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let latestChapters = [];
+  try {
+    latestChapters = await ttttRpc("tttt_list_latest_chapters", { p_limit: 200 });
+  } catch (err) {
+    console.error("Chưa cài RPC thu phí:", err);
+  }
 
   stories = storyResult.data || [];
-  chapters = chapterResult.data || [];
+  chapters = Array.isArray(latestChapters) ? latestChapters : [];
 
   const newest = [...stories].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   const hot = [...stories].sort((a, b) => (b.views || 0) - (a.views || 0));
