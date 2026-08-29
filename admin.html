@@ -119,6 +119,8 @@
         <button class="admin-tab active" data-tab="chaptersPage">Danh sách chương</button>
         <button class="admin-tab" data-tab="storyFormPage">Tạo / Sửa truyện</button>
         <button class="admin-tab" data-tab="storiesPage">Danh sách truyện</button>
+        <button class="admin-tab" data-tab="paywallPage">Khóa chương / Thu phí</button>
+        <button class="admin-tab" data-tab="paymentsPage">Đơn thanh toán</button>
       </aside>
 
       <div class="admin-content">
@@ -175,6 +177,54 @@
             <div id="adminStoryList"></div>
           </section>
         </section>
+
+        <section class="admin-page" id="paywallPage">
+          <section class="admin-box">
+            <h2>Khóa chương / Thu phí</h2>
+            <p class="meta">
+              Ví dụ truyện có 100 chương: nhập <b>Miễn phí đến chương 50</b> thì chương 51 trở đi sẽ tự khóa.
+              Người đọc không cần đăng ký tài khoản.
+            </p>
+
+            <form id="paywallForm">
+              <select id="paywallStorySelect" name="story_id"></select>
+
+              <label class="paywall-check">
+                <input type="checkbox" name="enabled">
+                Bật thu phí cho truyện này
+              </label>
+
+              <input name="free_until" type="number" min="0" value="50" placeholder="Miễn phí đến chương số...">
+              <input name="price_vnd" type="number" min="0" step="1000" value="29000" placeholder="Giá mở khóa toàn bộ phần trả phí">
+
+              <h3>Thông tin nhận chuyển khoản</h3>
+              <input name="bank_name" placeholder="Tên ngân hàng, ví dụ MB Bank">
+              <input name="bank_account" placeholder="Số tài khoản">
+              <input name="account_name" placeholder="Tên chủ tài khoản">
+              <input name="qr_url" placeholder="Link ảnh QR chuyển khoản (không bắt buộc)">
+              <input name="transfer_prefix" value="TTTT" placeholder="Tiền tố nội dung chuyển khoản">
+
+              <button type="submit">Lưu thiết lập thu phí</button>
+            </form>
+
+            <p class="meta" id="paywallSaveStatus"></p>
+          </section>
+        </section>
+
+        <section class="admin-page" id="paymentsPage">
+          <section class="admin-box">
+            <div class="payment-admin-head">
+              <div>
+                <h2>Đơn thanh toán</h2>
+                <p class="meta">Khi thấy tiền đã vào tài khoản, bấm “Đã nhận tiền”. Website sẽ tự cấp mã mở khóa.</p>
+              </div>
+              <button type="button" id="refreshPaymentsBtn">Làm mới</button>
+            </div>
+
+            <div id="paymentOrderList"></div>
+          </section>
+        </section>
+
       </div>
     </div>
   </section>
