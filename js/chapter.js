@@ -32,11 +32,16 @@ function splitParagraphs(text) {
 
   if (!normalized) return [];
 
+  /*
+    GIỮ ĐÚNG XUỐNG DÒNG KHI NHẬP CHƯƠNG:
+    - Mỗi lần Enter trong Admin = một đoạn mới.
+    - Nhiều dòng trống liên tiếp không tạo đoạn rỗng.
+    - Không nối tất cả các dòng thành một khối dài nữa.
+  */
   return normalized
-    .split(/\n\s*\n+/)
+    .split(/\n+/)
     .map(paragraph =>
       paragraph
-        .replace(/\s*\n\s*/g, " ")
         .replace(/[ \t]+/g, " ")
         .trim()
     )
