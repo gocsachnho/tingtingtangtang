@@ -1414,7 +1414,7 @@ body {
 
   /* Căn đều cả mép trái và mép phải */
   text-align: justify !important;
-  text-align-last: justify !important;
+  text-align-last: left !important;
   text-justify: inter-word;
 
   letter-spacing: 0 !important;
@@ -1443,7 +1443,7 @@ body {
   color: inherit !important;
 
   text-align: justify !important;
-  text-align-last: justify !important;
+  text-align-last: left !important;
   text-justify: inter-word;
 
   letter-spacing: 0 !important;
@@ -1486,6 +1486,22 @@ body {
   #chapterContent p,
   .chapter-content p {
     text-align: justify !important;
-    text-align-last: justify !important;
+    text-align-last: left !important;
   }
+}
+
+/* ===== FINAL JUSTIFY FIX V3 =====
+   Căn đều hai lề đúng kiểu sách:
+   - Các dòng giữa: justify
+   - Dòng cuối đoạn: căn trái, KHÔNG kéo giãn từ
+*/
+#chapterContent,
+.chapter-content,
+#chapterContent p,
+.chapter-content p {
+  text-align: justify !important;
+  text-align-last: left !important;
+  text-justify: inter-word !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
 }
