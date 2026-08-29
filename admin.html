@@ -222,7 +222,10 @@
             <form id="chapterForm">
               <input type="hidden" name="id">
               <select name="story_id" id="storySelect"></select>
-              <input name="chapter_order" type="number" placeholder="Số chương, ví dụ 1" required>
+              <input id="chapterOrderInput" name="chapter_order" type="number" min="1" placeholder="Số chương tự động" required>
+              <small id="chapterOrderHint" style="display:block;margin:-8px 0 10px 4px;color:#8a607c;font-weight:700;">
+                Số chương sẽ tự động lấy số tiếp theo của truyện đang chọn.
+              </small>
               <input name="title" placeholder="Tên chương, có thể bỏ trống">
               <input name="shortlink" placeholder="Link rút gọn / affiliate, có thể bỏ trống">
               <textarea name="content" placeholder="Nội dung chương" required></textarea>
@@ -325,6 +328,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/text-normalizer.js"></script>
-<script src="js/admin.js"></script>
+<script src="js/admin.js?v=20260829-auto-chapter-1"></script>
 </body>
 </html>
