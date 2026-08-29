@@ -1396,116 +1396,71 @@ body {
   }
 }
 
+/* Đã loại bỏ rule toàn cục ép mọi div/p sang Arial vì gây xung đột font. */
+/* =========================================================
+   HOTFIX 2026-08-29 — FONT + UNICODE TIẾNG VIỆT
+   Giữ phần này ở CUỐI file để không bị các rule cũ ghi đè.
+========================================================= */
 
-/* ===== BẢN SỬA FONT + BÌNH LUẬN 2026-08-06 ===== */
-body {
-  font-family: "Nunito", Arial, sans-serif !important;
-  font-weight: 500;
+#chapterContent,
+.chapter-content {
+  font-family: "Noto Serif", "Times New Roman", Georgia, serif !important;
+  font-size: 22px !important;
+  line-height: 1.95 !important;
+  font-weight: 600 !important;
+  color: #2f2433 !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  font-kerning: normal !important;
+  font-variant-ligatures: common-ligatures !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: left !important;
+  text-align-last: auto !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  hyphens: none !important;
 }
 
-.story-box,
-.story-box p,
-.story-box div,
-.story-left .meta,
-.chapter-row,
-.comment-section,
-.comment-form input,
-.comment-form textarea,
-.comment-form button,
-.comment-item {
-  font-family: "Nunito", Arial, sans-serif !important;
+#chapterContent p,
+.chapter-content p {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-weight: inherit !important;
+  color: inherit !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  text-align: left !important;
+  text-align-last: auto !important;
+  margin: 0 0 24px !important;
 }
 
-.story-box h1,
-.detail > h2,
-.comment-section h2,
-.recommend-section h2 {
-  font-family: "Playfair Display", Georgia, serif !important;
+#chapterContent strong,
+#chapterContent b,
+.chapter-content strong,
+.chapter-content b {
+  font-family: inherit !important;
+  font-weight: 700 !important;
 }
 
 .story-description,
-.story-description p {
-  font-family: "Noto Serif", Georgia, serif !important;
-  font-weight: 400 !important;
+#storyDescription,
+.story-description p,
+#storyDescription p {
+  font-family: "Nunito", Arial, sans-serif !important;
   letter-spacing: 0 !important;
   word-spacing: normal !important;
+  font-kerning: normal !important;
 }
 
-.comment-section {
-  max-width: 100%;
-  margin: 36px 0;
-  padding: 28px;
-  background: #fff;
-  border: 1px solid #ead1e1;
-  border-radius: 16px;
-}
-
-.comment-form {
-  display: grid;
-  gap: 10px;
-}
-
-.comment-form input,
-.comment-form textarea {
-  width: 100%;
-  box-sizing: border-box;
-  color: #2d2230;
-  background: #fffafd;
-  border: 1px solid #e3b8d3;
-  border-radius: 10px;
-  padding: 12px 14px;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.comment-form textarea {
-  min-height: 110px;
-  resize: vertical;
-}
-
-.comment-form button {
-  justify-self: start;
-  min-width: 140px;
-  border: 0;
-  border-radius: 999px;
-  padding: 11px 20px;
-  background: #d878b5;
-  color: #fff;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.comment-form button:disabled {
-  opacity: .65;
-  cursor: wait;
-}
-
-#commentList {
-  display: grid;
-  gap: 12px;
-  margin-top: 22px;
-}
-
-.comment-item {
-  padding: 14px 16px;
-  background: #fffafd;
-  border: 1px solid #ecd6e4;
-  border-radius: 12px;
-}
-
-.comment-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: center;
-}
-
-.comment-head b { color: #6f315a; }
-.comment-head span { color: #887080; font-size: 13px; }
-.comment-item p { margin: 9px 0 0; white-space: normal; overflow-wrap: anywhere; }
-.comment-message.error { color: #a31f3b; }
-
-@media (max-width: 760px) {
-  .comment-section { padding: 18px; }
-  .comment-head { align-items: flex-start; flex-direction: column; gap: 3px; }
+@media (max-width: 768px) {
+  #chapterContent,
+  .chapter-content {
+    font-size: 19px !important;
+    line-height: 1.9 !important;
+    font-weight: 600 !important;
+  }
 }
