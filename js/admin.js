@@ -126,6 +126,32 @@ function chapterLabel(chapter) {
     : `Chương ${chapter.chapter_order}`;
 }
 
+
+function getNextChapterOrder(storyId) {
+  const orders = chapters
+    .filter(chapter => chapter.story_id === storyId)
+    .map(chapter => Number(chapter.chapter_order))
+    .filter(order => Number.isFinite(order) && order > 0);
+
+  return orders.length ? Math.max(...orders) + 1 : 1;
+}
+
+function fillNextChapterOrder(storyId, force = false) {
+  const form = document.getElementById("chapterForm");
+  if (!form || !storyId) return;
+
+  // Khi đang sửa một chương cũ thì không tự ghi đè số chương đó.
+  if (form.elements.id.value && !force) return;
+
+  const nextOrder = getNextChapterOrder(storyId);
+  form.elements.chapter_order.value = nextOrder;
+
+  const hint = document.getElementById("chapterOrderHint");
+  if (hint) {
+    hint.textContent = `Tự động đề xuất: Chương ${nextOrder}. Bạn vẫn có thể sửa số nếu cần.`;
+  }
+}
+
 function renderStorySelect() {
   const select = document.getElementById("storySelect");
 
@@ -138,7 +164,11 @@ function renderStorySelect() {
   select.onchange = function () {
     currentStoryId = this.value;
     renderChapters();
+    fillNextChapterOrder(currentStoryId);
   };
+
+  // Khi mở Admin hoặc tải lại dữ liệu, tự điền số chương kế tiếp.
+  fillNextChapterOrder(currentStoryId);
 }
 
 function renderStories() {
@@ -338,7 +368,17 @@ document.getElementById("chapterForm").addEventListener("submit", async function
   form.elements.story_id.value = selectedStoryId;
 
   await loadAdminData();
-  alert("Đã lưu chương.");
+
+  const nextOrder = getNextChapterOrder(selectedStoryId);
+  fillNextChapterOrder(selectedStoryId, true);
+
+  alert(
+    `Đã lưu Chương ${chapterOrder}.\n` +
+    `Số chương tiếp theo đã tự chuyển thành Chương ${nextOrder}.`
+  );
+
+  // Đưa con trỏ vào ô tên chương để nhập chương mới nhanh hơn.
+  form.elements.title.focus();
 });
 
 function editChapter(id) {
