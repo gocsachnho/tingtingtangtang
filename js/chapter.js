@@ -173,15 +173,45 @@ async function checkPayment() {
   }
 }
 
-function useExistingUnlockCode() {
+async function useExistingUnlockCode() {
   const input = document.getElementById("unlockCodeInput");
-  const code = ttttSaveUnlockCode(storyId, input?.value || "");
-  if (!code) {
-    paywallMessage("Bạn chưa nhập mã mở khóa.", "error");
+  const enteredCode = ttttNormalizeAccessCode(input?.value || "");
+
+  if (!enteredCode) {
+    paywallMessage("Bạn chưa nhập mã mở khóa / mã đơn thanh toán.", "error");
     return;
   }
-  paywallMessage("Đang kiểm tra mã mở khóa...");
-  location.reload();
+
+  const btn = document.getElementById("useUnlockBtn");
+  if (btn) btn.disabled = true;
+  paywallMessage("Đang kiểm tra mã...");
+
+  try {
+    const result = await ttttRpc("tttt_validate_access_code", {
+      p_story_id: storyId,
+      p_code: enteredCode
+    });
+
+    if (!result?.ok || !result?.valid) {
+      localStorage.removeItem(ttttUnlockKey(storyId));
+      paywallMessage(
+        "Mã không hợp lệ, chưa được xác nhận thanh toán, hoặc mã này thuộc truyện khác.",
+        "error"
+      );
+      return;
+    }
+
+    // Lưu mã mở khóa chuẩn do Supabase trả về.
+    // Từ máy khác có thể nhập cả MÃ MỞ KHÓA hoặc MÃ ĐƠN THANH TOÁN đã thanh toán.
+    ttttSaveUnlockCode(storyId, result.unlock_code || enteredCode);
+    paywallMessage("Mã hợp lệ. Đang mở khóa truyện...", "ok");
+    setTimeout(() => location.reload(), 450);
+  } catch (err) {
+    console.error(err);
+    paywallMessage("Không kiểm tra được mã. " + (err.message || ""), "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function renderLockedBox(chapterData) {
@@ -208,9 +238,9 @@ function renderLockedBox(chapterData) {
 
       <div class="unlock-existing">
         <h3>Đã mua trước đó?</h3>
-        <p>Nhập mã mở khóa đã được cấp. Không cần đăng ký tài khoản.</p>
+        <p>Nhập <b>mã mở khóa</b> hoặc <b>mã đơn thanh toán đã được xác nhận</b>. Không cần đăng ký tài khoản.</p>
         <div class="unlock-row">
-          <input id="unlockCodeInput" autocomplete="off" placeholder="Ví dụ: TTTT-AB12CD34EF56">
+          <input id="unlockCodeInput" autocomplete="off" placeholder="Nhập mã TTTT-...">
           <button type="button" id="useUnlockBtn">Mở khóa</button>
         </div>
       </div>

@@ -5,6 +5,15 @@ function ttttFormatVND(value) {
   return n.toLocaleString("vi-VN") + "đ";
 }
 
+
+function ttttNormalizeAccessCode(code) {
+  return String(code || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[‐‑‒–—―]/g, "-")
+    .replace(/\s+/g, "");
+}
+
 function ttttUnlockKey(storyId) {
   return `tttt_unlock_${storyId}`;
 }
@@ -14,11 +23,11 @@ function ttttPaymentKey(storyId) {
 }
 
 function ttttGetUnlockCode(storyId) {
-  return (localStorage.getItem(ttttUnlockKey(storyId)) || "").trim();
+  return ttttNormalizeAccessCode(localStorage.getItem(ttttUnlockKey(storyId)) || "");
 }
 
 function ttttSaveUnlockCode(storyId, code) {
-  const clean = String(code || "").trim().toUpperCase();
+  const clean = ttttNormalizeAccessCode(code);
   if (clean) localStorage.setItem(ttttUnlockKey(storyId), clean);
   return clean;
 }

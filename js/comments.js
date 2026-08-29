@@ -1,91 +1,87 @@
-const commentParams = new URLSearchParams(window.location.search);
+const commentParams = new URLSearchParams(location.search);
 const commentStoryId = commentParams.get("id");
 const commentChapterOrder = commentParams.get("chapter");
+
 const commentTargetType = commentChapterOrder ? "chapter" : "story";
 
 function escapeComment(text) {
-  return String(text ?? "")
+  return String(text || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/>/g, "&gt;");
 }
 
-function formatCommentTime(value) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString("vi-VN");
+function renderCommentBox() {
+  const box = document.getElementById("commentBox");
+  if (!box || !commentStoryId) return;
+
+  box.innerHTML = `
+    <section class="comment-section">
+      <h2>Bình luận</h2>
+
+      <div class="comment-form">
+        <input id="commentName" placeholder="Tên của bạn">
+        <textarea id="commentContent" placeholder="Viết bình luận..."></textarea>
+        <button id="sendComment">Gửi bình luận</button>
+      </div>
+
+      <div id="commentList"></div>
+    </section>
+  `;
+
+  document.getElementById("sendComment").addEventListener("click", addComment);
+  loadComments();
 }
 
 async function loadComments() {
   const list = document.getElementById("commentList");
-  if (!list || !commentStoryId) return;
-
-  list.innerHTML = '<p class="meta">Đang tải bình luận...</p>';
+  if (!list) return;
 
   let query = db
     .from("comments")
-    .select("id,name,content,created_at,story_id,target_type,chapter_order")
+    .select("*")
     .eq("story_id", commentStoryId)
     .eq("target_type", commentTargetType)
-    .order("created_at", { ascending: false })
-    .limit(100);
+    .order("created_at", { ascending: false });
 
   if (commentTargetType === "chapter") {
     query = query.eq("chapter_order", Number(commentChapterOrder));
-  } else {
-    query = query.is("chapter_order", null);
   }
 
   const { data, error } = await query;
 
   if (error) {
-    console.error("Lỗi tải bình luận:", error);
-    list.innerHTML = `<p class="comment-message error">Không tải được bình luận: ${escapeComment(error.message)}</p>`;
+    list.innerHTML = `<p class="meta">Không tải được bình luận.</p>`;
     return;
   }
 
-  if (!data?.length) {
-    list.innerHTML = '<p class="meta">Chưa có bình luận nào.</p>';
+  if (!data || !data.length) {
+    list.innerHTML = `<p class="meta">Chưa có bình luận nào.</p>`;
     return;
   }
 
-  list.innerHTML = data.map(comment => `
-    <article class="comment-item">
+  list.innerHTML = data.map(c => `
+    <div class="comment-item">
       <div class="comment-head">
-        <b>${escapeComment(comment.name || "Ẩn danh")}</b>
-        <span>${escapeComment(formatCommentTime(comment.created_at))}</span>
+        <b>${escapeComment(c.name)}</b>
+        <span>${new Date(c.created_at).toLocaleString("vi-VN")}</span>
       </div>
-      <p>${escapeComment(comment.content).replace(/\n/g, "<br>")}</p>
-    </article>
+
+      <p>${escapeComment(c.content)}</p>
+
+      <button class="comment-delete" onclick="deleteComment('${c.id}')">Xóa</button>
+    </div>
   `).join("");
 }
 
 async function addComment() {
-  const nameInput = document.getElementById("commentName");
-  const contentInput = document.getElementById("commentContent");
-  const button = document.getElementById("sendComment");
-
-  if (!nameInput || !contentInput || !button || !commentStoryId) return;
-
-  const name = nameInput.value.trim();
-  const content = contentInput.value.trim();
+  const name = document.getElementById("commentName").value.trim();
+  const content = document.getElementById("commentContent").value.trim();
 
   if (!name || !content) {
-    alert("Bạn hãy nhập tên và nội dung bình luận.");
+    alert("Nhập tên và nội dung bình luận nha.");
     return;
   }
-  if (name.length > 80) {
-    alert("Tên không được dài quá 80 ký tự.");
-    return;
-  }
-  if (content.length > 2000) {
-    alert("Bình luận không được dài quá 2.000 ký tự.");
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "Đang gửi...";
 
   const payload = {
     story_id: commentStoryId,
@@ -95,37 +91,32 @@ async function addComment() {
     content
   };
 
-  const { error } = await db.from("comments").insert([payload]);
-
-  button.disabled = false;
-  button.textContent = "Gửi bình luận";
+  const { error } = await db.from("comments").insert(payload);
 
   if (error) {
-    console.error("Lỗi gửi bình luận:", error);
-    alert("Không gửi được bình luận: " + error.message);
+    alert("Gửi bình luận lỗi: " + error.message);
     return;
   }
 
-  nameInput.value = "";
-  contentInput.value = "";
-  await loadComments();
-}
-
-function initComments() {
-  const button = document.getElementById("sendComment");
-  const contentInput = document.getElementById("commentContent");
-  if (!button || !commentStoryId) return;
-
-  button.addEventListener("click", addComment);
-  contentInput?.addEventListener("keydown", event => {
-    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-      event.preventDefault();
-      addComment();
-    }
-  });
+  document.getElementById("commentName").value = "";
+  document.getElementById("commentContent").value = "";
   loadComments();
 }
 
-document.readyState === "loading"
-  ? document.addEventListener("DOMContentLoaded", initComments)
-  : initComments();
+async function deleteComment(id) {
+  if (!confirm("Xóa bình luận này?")) return;
+
+  const { error } = await db
+    .from("comments")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("Xóa bình luận lỗi.");
+    return;
+  }
+
+  loadComments();
+}
+
+renderCommentBox();
