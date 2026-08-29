@@ -1397,11 +1397,13 @@ body {
 }
 
 /* Đã loại bỏ rule toàn cục ép mọi div/p sang Arial vì gây xung đột font. */
+
 /* =========================================================
-   HOTFIX 2026-08-29 — FONT + UNICODE TIẾNG VIỆT
-   Giữ phần này ở CUỐI file để không bị các rule cũ ghi đè.
+   FINAL FIX — TIẾNG VIỆT + CĂN ĐỀU HAI LỀ
+   Đây là rule cuối cùng, dùng để tránh xung đột với các rule cũ.
 ========================================================= */
 
+/* Nội dung chương */
 #chapterContent,
 .chapter-content {
   font-family: "Noto Serif", "Times New Roman", Georgia, serif !important;
@@ -1409,6 +1411,12 @@ body {
   line-height: 1.95 !important;
   font-weight: 600 !important;
   color: #2f2433 !important;
+
+  /* Căn đều cả mép trái và mép phải */
+  text-align: justify !important;
+  text-align-last: justify !important;
+  text-justify: inter-word;
+
   letter-spacing: 0 !important;
   word-spacing: normal !important;
   font-kerning: normal !important;
@@ -1416,14 +1424,16 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: left !important;
-  text-align-last: auto !important;
+
   word-break: normal !important;
   overflow-wrap: break-word !important;
   white-space: normal !important;
   hyphens: none !important;
+
+  padding: 28px !important;
 }
 
+/* Từng đoạn văn trong chương */
 #chapterContent p,
 .chapter-content p {
   font-family: inherit !important;
@@ -1431,13 +1441,19 @@ body {
   line-height: inherit !important;
   font-weight: inherit !important;
   color: inherit !important;
+
+  text-align: justify !important;
+  text-align-last: justify !important;
+  text-justify: inter-word;
+
   letter-spacing: 0 !important;
   word-spacing: normal !important;
-  text-align: left !important;
-  text-align-last: auto !important;
+  text-indent: 0 !important;
+
   margin: 0 0 24px !important;
 }
 
+/* Chữ đậm vẫn dùng đúng font tiếng Việt */
 #chapterContent strong,
 #chapterContent b,
 .chapter-content strong,
@@ -1446,6 +1462,7 @@ body {
   font-weight: 700 !important;
 }
 
+/* Phần giới thiệu truyện giữ Nunito */
 .story-description,
 #storyDescription,
 .story-description p,
@@ -1456,21 +1473,19 @@ body {
   font-kerning: normal !important;
 }
 
+/* Điện thoại */
 @media (max-width: 768px) {
   #chapterContent,
   .chapter-content {
     font-size: 19px !important;
     line-height: 1.9 !important;
     font-weight: 600 !important;
+    padding: 18px !important;
   }
-}
-/* CĂN ĐỀU HAI LỀ NỘI DUNG TRUYỆN */
-.chapter-content,
-.chapter-content p,
-.story-content,
-.story-content p {
+
+  #chapterContent p,
+  .chapter-content p {
     text-align: justify !important;
-    text-justify: inter-word;
-    letter-spacing: 0 !important;
-    word-spacing: normal !important;
+    text-align-last: justify !important;
+  }
 }
