@@ -35,15 +35,10 @@ function formatDescription(text) {
 
 function chapterLabel(chapter) {
   const name = cleanVietnameseText(chapter.title || "").trim();
-
   return name
     ? `Chương ${chapter.chapter_order}: ${name}`
     : `Chương ${chapter.chapter_order}`;
 }
-
-/* =========================
-   CHAPTER LIST
-========================= */
 
 function renderChapterPage(page) {
   currentPage = page;
@@ -53,12 +48,19 @@ function renderChapterPage(page) {
   const end = start + CHAPTERS_PER_PAGE;
   const pageChapters = allChapters.slice(start, end);
 
-  document.getElementById("chapterList").innerHTML = pageChapters.map(chapter => `
-    <a class="chapter-row" href="${chapterUrl(chapter)}">
-      <span>${escapeHtml(chapterLabel(chapter))}</span>
-      <span>Đọc →</span>
-    </a>
-  `).join("");
+  document.getElementById("chapterList").innerHTML = pageChapters.map(chapter => {
+    const locked = !!chapter.is_locked;
+    const rightText = locked
+      ? `🔒 ${ttttFormatVND(chapter.price_vnd || 0)}`
+      : "Đọc →";
+
+    return `
+      <a class="chapter-row ${locked ? "paid-chapter-row" : ""}" href="${chapterUrl(chapter)}">
+        <span>${locked ? "🔒 " : ""}${escapeHtml(chapterLabel(chapter))}</span>
+        <span>${rightText}</span>
+      </a>
+    `;
+  }).join("");
 
   renderPagination(totalPages);
 }
@@ -83,17 +85,10 @@ function renderPagination(totalPages) {
       i === totalPages ||
       Math.abs(i - currentPage) <= 2;
 
-    const showDotsBefore =
-      i === currentPage - 3 &&
-      currentPage > 4;
+    const showDotsBefore = i === currentPage - 3 && currentPage > 4;
+    const showDotsAfter = i === currentPage + 3 && currentPage < totalPages - 3;
 
-    const showDotsAfter =
-      i === currentPage + 3 &&
-      currentPage < totalPages - 3;
-
-    if (showDotsBefore || showDotsAfter) {
-      html += `<span>...</span>`;
-    }
+    if (showDotsBefore || showDotsAfter) html += `<span>...</span>`;
 
     if (showButton) {
       html += `
@@ -113,35 +108,23 @@ function renderPagination(totalPages) {
   pagination.innerHTML = html;
 }
 
-/* =========================
-   LOAD STORY + VIEW COUNT
-========================= */
-
 async function increaseView(story) {
   if (!story) return;
 
   const key = `view_${story.id}`;
   const viewed = localStorage.getItem(key);
-
   if (viewed) return;
 
   await db
     .from("stories")
-    .update({
-      views: (story.views || 0) + 1
-    })
+    .update({ views: (story.views || 0) + 1 })
     .eq("id", story.id);
 
   localStorage.setItem(key, "1");
 }
 
-/* =========================
-   RECOMMENDATIONS
-========================= */
-
 async function loadRecommendations() {
   const box = document.getElementById("recommendList");
-
   if (!currentStory) return;
 
   const { data } = await db
@@ -172,76 +155,77 @@ async function loadRecommendations() {
   }).join("");
 }
 
-/* =========================
-   LOAD STORY
-========================= */
-
 async function loadStory() {
-  const { data: story } = await db
-    .from("stories")
-    .select("*")
-    .eq("id", id)
-    .single();
+  try {
+    const { data: story } = await db
+      .from("stories")
+      .select("*")
+      .eq("id", id)
+      .single();
 
-  if (!story) {
-    document.getElementById("storyDetail").innerHTML =
-      "<p>Không tìm thấy truyện.</p>";
-    return;
-  }
+    if (!story) {
+      document.getElementById("storyDetail").innerHTML = "<p>Không tìm thấy truyện.</p>";
+      return;
+    }
 
-  currentStory = story;
+    currentStory = story;
+    increaseView(story);
 
-  increaseView(story);
+    const unlockCode = ttttGetUnlockCode(story.id);
+    const chapters = await ttttRpc("tttt_list_chapters", {
+      p_story_id: story.id,
+      p_unlock_code: unlockCode || null
+    });
 
-  const { data: chapters } = await db
-    .from("chapters")
-    .select("*")
-    .eq("story_id", story.id)
-    .order("chapter_order", { ascending: true });
+    allChapters = Array.isArray(chapters) ? chapters : [];
 
-  allChapters = chapters || [];
+    const title = cleanVietnameseText(story.title || "");
+    const author = cleanVietnameseText(story.author || "");
+    const genre = cleanVietnameseText(story.genre || "");
 
-  const title = cleanVietnameseText(story.title || "");
-  const author = cleanVietnameseText(story.author || "");
-  const genre = cleanVietnameseText(story.genre || "");
+    document.title = title;
 
-  document.title = title;
+    const hasPaid = allChapters.some(c => c.is_locked);
+    const payInfo = hasPaid
+      ? `<div class="story-pay-badge">🔒 Có chương trả phí</div>`
+      : "";
 
-  document.getElementById("storyDetail").innerHTML = `
-    <div class="story-box">
-      <div class="story-header-layout">
-
-        <div class="story-left">
-          ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(title)}">` : ""}
-          <h1>${escapeHtml(title)}</h1>
-
-          <p class="meta">
-            Tác giả: ${escapeHtml(author)}<br>
-            Thể loại: ${escapeHtml(genre)}<br>
-            Lượt xem: ${story.views || 0}
-          </p>
-        </div>
-
-        <div class="story-right">
-          <div class="story-description">
-            ${formatDescription(story.description || "")}
+    document.getElementById("storyDetail").innerHTML = `
+      <div class="story-box">
+        <div class="story-header-layout">
+          <div class="story-left">
+            ${story.cover ? `<img src="${escapeHtml(story.cover)}" alt="${escapeHtml(title)}">` : ""}
+            <h1>${escapeHtml(title)}</h1>
+            <p class="meta">
+              Tác giả: ${escapeHtml(author)}<br>
+              Thể loại: ${escapeHtml(genre)}<br>
+              Lượt xem: ${story.views || 0}
+            </p>
+            ${payInfo}
           </div>
 
-          ${
-            allChapters.length
-              ? `<a class="read-first-btn" href="${chapterUrl(allChapters[0])}">
-                  Đọc từ đầu
-                 </a>`
-              : ""
-          }
+          <div class="story-right">
+            <div class="story-description">
+              ${formatDescription(story.description || "")}
+            </div>
+
+            ${
+              allChapters.length
+                ? `<a class="read-first-btn" href="${chapterUrl(allChapters[0])}">Đọc từ đầu</a>`
+                : ""
+            }
+          </div>
         </div>
-
       </div>
-    </div>
-  `;
+    `;
 
-  renderChapterPage(1);
-  loadRecommendations();
+    renderChapterPage(1);
+    loadRecommendations();
+  } catch (err) {
+    console.error(err);
+    document.getElementById("storyDetail").innerHTML =
+      `<p>Chưa cài hệ thống thu phí trong Supabase hoặc kết nối đang lỗi.</p>`;
+  }
 }
 
 loadStory();
