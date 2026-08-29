@@ -5,7 +5,7 @@
   <title>Ting Ting Tang Tang</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="./css/style.css?v=20260806-search">
+  <link rel="stylesheet" href="./css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <meta name="monetag" content="3a39f7c8a45da85d087850eda27ef662">
 </head>
@@ -39,20 +39,8 @@
     </div>
   </nav>
 
-  <div class="search-wrap" id="searchWrap">
-    <label class="sr-only" for="searchInput">Tìm truyện</label>
-    <input
-      id="searchInput"
-      type="search"
-      placeholder="Tìm truyện..."
-      autocomplete="off"
-      spellcheck="false"
-      aria-label="Tìm truyện"
-      aria-autocomplete="list"
-      aria-controls="searchResults"
-      aria-expanded="false"
-    >
-    <div id="searchResults" class="search-results" role="listbox" hidden></div>
+  <div class="search-wrap">
+    <input id="searchInput" placeholder="Tìm truyện...">
   </div>
 </header>
 
@@ -100,7 +88,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./js/supabase.js"></script>
-<script src="./js/app.js?v=20260806-search"></script>
+<script src="./js/text-normalizer.js"></script>
+<script src="./js/app.js"></script>
 
 </body>
 </html>
