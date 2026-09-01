@@ -24,6 +24,19 @@ function chapterLabel(chapter) {
     : `Chương ${chapter.chapter_order}`;
 }
 
+
+function renderChapterHeading(chapter) {
+  const titleEl = document.getElementById("chapterTitle");
+  if (!titleEl || !chapter) return;
+
+  const order = Number(chapter.chapter_order || 0);
+  const name = cleanVietnameseText(chapter.title || "").trim();
+
+  titleEl.innerHTML = name
+    ? `<span class="chapter-number-label">Chương ${order}:</span><span class="chapter-name-label">${escapeHtml(name)}</span>`
+    : `<span class="chapter-number-label">Chương ${order}</span>`;
+}
+
 function splitParagraphs(text) {
   const normalized = cleanVietnameseText(text)
     .replace(/\r\n?/g, "\n")
@@ -298,7 +311,7 @@ async function loadChapter() {
     const cleanStoryTitle = cleanVietnameseText(story.title || "");
 
     document.title = `${chapterLabel(chapterMeta)} - ${cleanStoryTitle}`;
-    document.getElementById("chapterTitle").textContent = chapterLabel(chapterMeta);
+    renderChapterHeading(chapterMeta);
     document.getElementById("storyName").textContent = cleanStoryTitle;
     document.getElementById("backStory").href = `story.html?id=${encodeURIComponent(story.id)}`;
 
