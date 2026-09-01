@@ -32,9 +32,9 @@ function renderChapterHeading(chapter) {
   const order = Number(chapter.chapter_order || 0);
   const name = cleanVietnameseText(chapter.title || "").trim();
 
-  titleEl.innerHTML = name
-    ? `<span class="chapter-number-label">Chương ${order}:</span><span class="chapter-name-label">${escapeHtml(name)}</span>`
-    : `<span class="chapter-number-label">Chương ${order}</span>`;
+  titleEl.textContent = name
+    ? `Chương ${order}: ${name}`
+    : `Chương ${order}`;
 }
 
 function splitParagraphs(text) {
