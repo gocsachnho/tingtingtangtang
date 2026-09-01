@@ -97,10 +97,31 @@
       font-family: "Playfair Display", serif;
       text-align: center;
       color: #b96fa3 !important;
-      font-size: 34px;
-      line-height: 1.35;
+      font-size: 30px;
+      line-height: 1.32;
       margin: 0 0 16px;
       font-weight: 800;
+    }
+
+    /* Số chương nhỏ hơn tên chương để các số 3 chữ số như 480 không bị nặng */
+    #chapterTitle .chapter-number-label {
+      display: inline-block;
+      font-family: "Nunito", Arial, sans-serif;
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 900;
+      margin-right: 9px;
+      vertical-align: 3px;
+      color: #b96fa3 !important;
+      white-space: nowrap;
+    }
+
+    #chapterTitle .chapter-name-label {
+      font-family: "Playfair Display", serif;
+      font-size: 30px;
+      line-height: 1.32;
+      font-weight: 800;
+      color: #b96fa3 !important;
     }
 
     .story-title {
@@ -247,8 +268,18 @@
       }
 
       h1 {
-        font-size: 25px;
-        line-height: 1.35;
+        font-size: 24px;
+        line-height: 1.32;
+      }
+
+      #chapterTitle .chapter-number-label {
+        font-size: 18px;
+        margin-right: 6px;
+        vertical-align: 2px;
+      }
+
+      #chapterTitle .chapter-name-label {
+        font-size: 24px;
       }
 
       .story-title {
@@ -328,7 +359,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/text-normalizer.js"></script>
 <script src="js/paywall.js?v=20260829-unlock2"></script>
-<script src="js/chapter.js?v=20260829-unlock2"></script>
+<script src="js/chapter.js?v=20260901-title-balance-1"></script>
 <script src="js/comments.js"></script>
 </body>
 </html>
