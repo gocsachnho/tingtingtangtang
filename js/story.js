@@ -109,18 +109,25 @@ function renderPagination(totalPages) {
 }
 
 async function increaseView(story) {
-  if (!story) return;
+  if (!story?.id) return Number(story?.views || 0);
 
-  const key = `view_${story.id}`;
-  const viewed = localStorage.getItem(key);
-  if (viewed) return;
+  try {
+    const { data, error } = await db.rpc("increment_story_views", {
+      p_story_id: story.id
+    });
 
-  await db
-    .from("stories")
-    .update({ views: (story.views || 0) + 1 })
-    .eq("id", story.id);
+    if (error) throw error;
 
-  localStorage.setItem(key, "1");
+    const newViews = Number(data);
+    if (Number.isFinite(newViews)) {
+      story.views = newViews;
+      return newViews;
+    }
+  } catch (err) {
+    console.error("Không tăng được lượt xem:", err);
+  }
+
+  return Number(story.views || 0);
 }
 
 async function loadRecommendations() {
@@ -169,7 +176,7 @@ async function loadStory() {
     }
 
     currentStory = story;
-    increaseView(story);
+    const updatedViews = await increaseView(story);
 
     const unlockCode = ttttGetUnlockCode(story.id);
     const chapters = await ttttRpc("tttt_list_chapters", {
@@ -199,7 +206,7 @@ async function loadStory() {
             <p class="meta">
               Tác giả: ${escapeHtml(author)}<br>
               Thể loại: ${escapeHtml(genre)}<br>
-              Lượt xem: ${story.views || 0}
+              Lượt xem: ${Number(updatedViews || 0).toLocaleString("vi-VN")}
             </p>
             ${payInfo}
           </div>
