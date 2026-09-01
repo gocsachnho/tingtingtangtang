@@ -74,10 +74,129 @@ function setNav(elId, chapter) {
   el.classList.remove("disabled");
 }
 
-function renderReaderContent(text) {
-  document.getElementById("chapterContent").innerHTML = splitParagraphs(text)
+
+
+let copyProtectToastTimer = null;
+
+function showCopyProtectToast(message = "Nội dung được bảo vệ bản quyền. Vui lòng đọc trực tiếp trên website.") {
+  let toast = document.getElementById("copyProtectToast");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "copyProtectToast";
+    toast.className = "copy-protect-toast";
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  clearTimeout(copyProtectToastTimer);
+  copyProtectToastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1800);
+}
+
+function maskUnlockCode(code) {
+  const clean = String(code || "").trim();
+
+  if (!clean) return "";
+  if (clean.length <= 8) return clean.slice(0, 3) + "•••";
+
+  return `${clean.slice(0, 7)}••••${clean.slice(-4)}`;
+}
+
+function svgEscapeText(text) {
+  return String(text || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+function applyReaderWatermark(isPaidChapter, unlockCode) {
+  const content = document.getElementById("chapterContent");
+  if (!content) return;
+
+  const watermarkText = isPaidChapter && unlockCode
+    ? `chamdoctruyen.info • ${maskUnlockCode(unlockCode)}`
+    : "chamdoctruyen.info";
+
+  const safeText = svgEscapeText(watermarkText);
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="430" height="220" viewBox="0 0 430 220">
+      <g transform="translate(22 130) rotate(-24)">
+        <text
+          x="0"
+          y="0"
+          fill="rgba(185,111,163,0.12)"
+          font-family="Arial, sans-serif"
+          font-size="18"
+          font-weight="700"
+          letter-spacing="0.4"
+        >${safeText}</text>
+      </g>
+    </svg>
+  `;
+
+  content.style.setProperty(
+    "--reader-watermark",
+    `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+  );
+}
+
+function isTypingTarget(target) {
+  if (!target) return false;
+  return !!target.closest?.("input, textarea, select, [contenteditable='true']");
+}
+
+function protectReaderContent() {
+  const content = document.getElementById("chapterContent");
+  if (!content || content.dataset.copyProtected === "1") return;
+
+  content.dataset.copyProtected = "1";
+  content.classList.add("protected-reader");
+
+  ["copy", "cut", "contextmenu", "dragstart", "selectstart"].forEach(eventName => {
+    content.addEventListener(eventName, event => {
+      event.preventDefault();
+      showCopyProtectToast();
+    });
+  });
+
+  document.addEventListener("keydown", event => {
+    if (isTypingTarget(event.target)) return;
+
+    const key = String(event.key || "").toLowerCase();
+    const ctrlOrMeta = event.ctrlKey || event.metaKey;
+
+    const blocked =
+      event.key === "F12" ||
+      (ctrlOrMeta && ["c", "x", "u", "s", "p", "a"].includes(key)) ||
+      (ctrlOrMeta && event.shiftKey && ["i", "j", "c"].includes(key));
+
+    if (!blocked) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    showCopyProtectToast(
+      key === "p"
+        ? "Chức năng in nội dung chương đã được tắt."
+        : "Nội dung được bảo vệ bản quyền. Vui lòng đọc trực tiếp trên website."
+    );
+  }, true);
+}
+
+function renderReaderContent(text, options = {}) {
+  const content = document.getElementById("chapterContent");
+
+  content.innerHTML = splitParagraphs(text)
     .map(p => `<p>${escapeHtml(p)}</p>`)
     .join("");
+
+  protectReaderContent();
+  applyReaderWatermark(!!options.isPaidChapter, options.unlockCode || "");
 }
 
 function paywallMessage(msg, type = "") {
@@ -229,6 +348,9 @@ async function useExistingUnlockCode() {
 
 function renderLockedBox(chapterData) {
   const content = document.getElementById("chapterContent");
+  content.classList.remove("protected-reader");
+  content.removeAttribute("data-copy-protected");
+  content.style.removeProperty("--reader-watermark");
   const price = Number(chapterData.price_vnd || 0);
   const savedDraft = ttttGetPaymentDraft(storyId);
 
@@ -316,7 +438,10 @@ async function loadChapter() {
     document.getElementById("backStory").href = `story.html?id=${encodeURIComponent(story.id)}`;
 
     if (chapterData.access_granted) {
-      renderReaderContent(chapterData.content || "");
+      renderReaderContent(chapterData.content || "", {
+        isPaidChapter: Number(chapterOrder) > Number(chapterData.free_until || 0),
+        unlockCode
+      });
     } else {
       renderLockedBox(chapterData);
     }
