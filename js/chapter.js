@@ -214,6 +214,7 @@ function ttsEls() {
     pause: document.getElementById("ttsPauseBtn"),
     stop: document.getElementById("ttsStopBtn"),
     rate: document.getElementById("ttsRate"),
+    gender: document.getElementById("ttsGender"),
     voice: document.getElementById("ttsVoice"),
     status: document.getElementById("ttsStatus")
   };
@@ -288,6 +289,39 @@ function splitTextForSpeech(text, maxLength = 190) {
   return chunks;
 }
 
+function normalizeVoiceName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function detectVietnameseVoiceGender(voice) {
+  const name = normalizeVoiceName(`${voice?.name || ""} ${voice?.voiceURI || ""}`);
+
+  const femaleHints = [
+    "hoaimy", "hoai my", "female", "woman", "girl",
+    "thao", "linh", "mai", "vy"
+  ];
+
+  const maleHints = [
+    "namminh", "nam minh", "male", "man", "boy",
+    "minh quan", "quang", "huy"
+  ];
+
+  if (femaleHints.some(hint => name.includes(hint))) return "female";
+  if (maleHints.some(hint => name.includes(hint))) return "male";
+
+  return "unknown";
+}
+
+function getVietnameseVoices() {
+  return ttsReader.voices.filter(v =>
+    /^vi[-_]/i.test(v.lang || "") ||
+    /vietnam|viet nam|tiếng việt|tieng viet/i.test(`${v.name} ${v.lang}`)
+  );
+}
+
 function getPreferredVietnameseVoice() {
   const els = ttsEls();
   const selectedName = els.voice?.value || "";
@@ -297,48 +331,84 @@ function getPreferredVietnameseVoice() {
     if (chosen) return chosen;
   }
 
-  return (
-    ttsReader.voices.find(v => /^vi[-_]/i.test(v.lang || "")) ||
-    ttsReader.voices.find(v => /vietnam|việt/i.test(`${v.name} ${v.lang}`)) ||
-    null
-  );
+  const vietnamese = getVietnameseVoices();
+  const gender = els.gender?.value || "auto";
+
+  if (gender === "female") {
+    const femaleVoice = vietnamese.find(v => detectVietnameseVoiceGender(v) === "female");
+    if (femaleVoice) return femaleVoice;
+  }
+
+  if (gender === "male") {
+    const maleVoice = vietnamese.find(v => detectVietnameseVoiceGender(v) === "male");
+    if (maleVoice) return maleVoice;
+  }
+
+  return vietnamese[0] || null;
 }
 
-function loadTtsVoices() {
-  if (!ttsReader.supported) return;
+function updateVoiceListForGender() {
+  const els = ttsEls();
+  if (!els.voice) return;
 
-  const all = window.speechSynthesis.getVoices() || [];
-  ttsReader.voices = all;
+  const previous = els.voice.value;
+  const vietnamese = getVietnameseVoices();
+  const gender = els.gender?.value || "auto";
 
-  const select = document.getElementById("ttsVoice");
-  if (!select) return;
+  let visibleVoices = vietnamese;
 
-  const previous = select.value;
-  const vietnamese = all.filter(v =>
-    /^vi[-_]/i.test(v.lang || "") ||
-    /vietnam|việt/i.test(`${v.name} ${v.lang}`)
-  );
+  if (gender === "female") {
+    const femaleVoices = vietnamese.filter(v => detectVietnameseVoiceGender(v) === "female");
+    if (femaleVoices.length) visibleVoices = femaleVoices;
+  } else if (gender === "male") {
+    const maleVoices = vietnamese.filter(v => detectVietnameseVoiceGender(v) === "male");
+    if (maleVoices.length) visibleVoices = maleVoices;
+  }
 
-  select.innerHTML = `<option value="">Tự động chọn giọng Việt</option>`;
+  els.voice.innerHTML = `<option value="">Tự động theo kiểu giọng</option>`;
 
-  vietnamese.forEach(voice => {
+  visibleVoices.forEach(voice => {
+    const detected = detectVietnameseVoiceGender(voice);
+    const label =
+      detected === "female" ? "Nữ" :
+      detected === "male" ? "Nam" :
+      "Không xác định";
+
     const option = document.createElement("option");
     option.value = voice.name;
-    option.textContent = `${voice.name} (${voice.lang || "vi"})`;
-    select.appendChild(option);
+    option.textContent = `${voice.name} — ${label}`;
+    els.voice.appendChild(option);
   });
 
-  if (previous && [...select.options].some(o => o.value === previous)) {
-    select.value = previous;
+  if (previous && [...els.voice.options].some(o => o.value === previous)) {
+    els.voice.value = previous;
+  } else {
+    els.voice.value = "";
   }
 
   if (!vietnamese.length) {
     const option = document.createElement("option");
     option.value = "";
-    option.textContent = "Thiết bị chưa có giọng Việt riêng";
+    option.textContent = "Thiết bị chưa có giọng tiếng Việt";
     option.disabled = true;
-    select.appendChild(option);
+    els.voice.appendChild(option);
+    return;
   }
+
+  if (gender === "female" && !vietnamese.some(v => detectVietnameseVoiceGender(v) === "female")) {
+    setTtsStatus("Thiết bị chưa cung cấp giọng nữ Việt riêng; sẽ dùng giọng Việt khả dụng.");
+  }
+
+  if (gender === "male" && !vietnamese.some(v => detectVietnameseVoiceGender(v) === "male")) {
+    setTtsStatus("Thiết bị chưa cung cấp giọng nam Việt riêng; sẽ dùng giọng Việt khả dụng.");
+  }
+}
+
+function loadTtsVoices() {
+  if (!ttsReader.supported) return;
+
+  ttsReader.voices = window.speechSynthesis.getVoices() || [];
+  updateVoiceListForGender();
 }
 
 function updateTtsButtons() {
@@ -553,10 +623,18 @@ function initTtsControls() {
       els.rate.value = savedRate;
     }
 
+    const savedGender = localStorage.getItem("tttt_tts_gender");
+    if (savedGender && ["auto", "female", "male"].includes(savedGender)) {
+      els.gender.value = savedGender;
+    }
+
+    updateVoiceListForGender();
+
     const savedVoice = localStorage.getItem("tttt_tts_voice");
     if (savedVoice) {
       // Chọn lại sau khi voices tải xong.
       setTimeout(() => {
+        updateVoiceListForGender();
         if ([...els.voice.options].some(o => o.value === savedVoice)) {
           els.voice.value = savedVoice;
         }
@@ -577,6 +655,16 @@ function initTtsControls() {
     restartTtsAtCurrentChunk();
   });
 
+  els.gender.addEventListener("change", () => {
+    try {
+      localStorage.setItem("tttt_tts_gender", els.gender.value);
+      localStorage.removeItem("tttt_tts_voice");
+    } catch (_) {}
+
+    updateVoiceListForGender();
+    restartTtsAtCurrentChunk();
+  });
+
   els.voice.addEventListener("change", () => {
     try {
       localStorage.setItem("tttt_tts_voice", els.voice.value);
@@ -592,7 +680,11 @@ function initTtsControls() {
   updateTtsButtons();
 }
 
-document.addEventListener("DOMContentLoaded", initTtsControls);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initTtsControls);
+} else {
+  initTtsControls();
+}
 
 function renderReaderContent(text, options = {}) {
   const content = document.getElementById("chapterContent");
