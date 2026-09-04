@@ -422,17 +422,17 @@
     <h1 id="chapterTitle">Đang tải chương...</h1>
     <div class="story-title" id="storyName"></div>
 
-    <section class="tts-player" id="ttsPlayer" hidden aria-label="Trình đọc truyện">
+    <section class="tts-player" id="ttsPlayer" aria-label="Trình đọc truyện">
       <div class="tts-player-title">
         <span class="tts-icon">🎧</span>
         <div>
           <b>Nghe truyện</b>
-          <small id="ttsStatus">Sẵn sàng đọc chương này</small>
+          <small id="ttsStatus">Đang chuẩn bị nội dung để đọc...</small>
         </div>
       </div>
 
       <div class="tts-controls">
-        <button type="button" id="ttsPlayBtn" class="tts-main-btn">🔊 Nghe</button>
+        <button type="button" id="ttsPlayBtn" class="tts-main-btn" disabled>🔊 Nghe</button>
         <button type="button" id="ttsPauseBtn" class="tts-secondary-btn" disabled>⏸ Tạm dừng</button>
         <button type="button" id="ttsStopBtn" class="tts-secondary-btn" disabled>⏹ Dừng</button>
 
@@ -449,8 +449,17 @@
           </select>
         </label>
 
+        <label class="tts-field">
+          <span>Kiểu giọng</span>
+          <select id="ttsGender">
+            <option value="auto" selected>Tự động</option>
+            <option value="female">👩 Giọng nữ</option>
+            <option value="male">👨 Giọng nam</option>
+          </select>
+        </label>
+
         <label class="tts-field tts-voice-field">
-          <span>Giọng</span>
+          <span>Giọng cụ thể</span>
           <select id="ttsVoice">
             <option value="">Tự động chọn giọng Việt</option>
           </select>
@@ -473,7 +482,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/text-normalizer.js"></script>
 <script src="js/paywall.js?v=20260829-unlock2"></script>
-<script src="js/chapter.js?v=20260904-tts-reader-1"></script>
+<script src="js/chapter.js?v=20260904-tts-gender-3"></script>
 <script src="js/comments.js"></script>
 </body>
 </html>
