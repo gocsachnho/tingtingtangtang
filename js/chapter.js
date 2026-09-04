@@ -188,6 +188,412 @@ function protectReaderContent() {
   }, true);
 }
 
+
+
+/* =========================================================
+   NGHE TRUYỆN - WEB SPEECH API
+   Dùng giọng TTS có sẵn trên máy/điện thoại, không tạo file audio.
+========================================================= */
+
+const ttsReader = {
+  supported: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
+  text: "",
+  chunks: [],
+  index: 0,
+  speaking: false,
+  paused: false,
+  stopped: true,
+  voices: [],
+  utterance: null
+};
+
+function ttsEls() {
+  return {
+    player: document.getElementById("ttsPlayer"),
+    play: document.getElementById("ttsPlayBtn"),
+    pause: document.getElementById("ttsPauseBtn"),
+    stop: document.getElementById("ttsStopBtn"),
+    rate: document.getElementById("ttsRate"),
+    voice: document.getElementById("ttsVoice"),
+    status: document.getElementById("ttsStatus")
+  };
+}
+
+function setTtsStatus(message) {
+  const el = document.getElementById("ttsStatus");
+  if (el) el.textContent = message;
+}
+
+function splitTextForSpeech(text, maxLength = 190) {
+  const clean = cleanVietnameseText(text || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!clean) return [];
+
+  // Ưu tiên ngắt ở cuối câu để giọng đọc tự nhiên hơn.
+  const sentences = clean.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) || [clean];
+  const chunks = [];
+  let buffer = "";
+
+  function pushBuffer() {
+    const value = buffer.trim();
+    if (value) chunks.push(value);
+    buffer = "";
+  }
+
+  sentences.forEach(sentence => {
+    const part = sentence.trim();
+    if (!part) return;
+
+    if ((buffer + " " + part).trim().length <= maxLength) {
+      buffer = (buffer + " " + part).trim();
+      return;
+    }
+
+    pushBuffer();
+
+    if (part.length <= maxLength) {
+      buffer = part;
+      return;
+    }
+
+    // Câu quá dài: ngắt tiếp theo dấu phẩy/chấm phẩy rồi cuối cùng theo từ.
+    const pieces = part.split(/(?<=[,;:])\s+/);
+
+    pieces.forEach(piece => {
+      if (piece.length <= maxLength) {
+        if ((buffer + " " + piece).trim().length <= maxLength) {
+          buffer = (buffer + " " + piece).trim();
+        } else {
+          pushBuffer();
+          buffer = piece;
+        }
+        return;
+      }
+
+      const words = piece.split(/\s+/);
+      words.forEach(word => {
+        if ((buffer + " " + word).trim().length <= maxLength) {
+          buffer = (buffer + " " + word).trim();
+        } else {
+          pushBuffer();
+          buffer = word;
+        }
+      });
+    });
+  });
+
+  pushBuffer();
+  return chunks;
+}
+
+function getPreferredVietnameseVoice() {
+  const els = ttsEls();
+  const selectedName = els.voice?.value || "";
+
+  if (selectedName) {
+    const chosen = ttsReader.voices.find(v => v.name === selectedName);
+    if (chosen) return chosen;
+  }
+
+  return (
+    ttsReader.voices.find(v => /^vi[-_]/i.test(v.lang || "")) ||
+    ttsReader.voices.find(v => /vietnam|việt/i.test(`${v.name} ${v.lang}`)) ||
+    null
+  );
+}
+
+function loadTtsVoices() {
+  if (!ttsReader.supported) return;
+
+  const all = window.speechSynthesis.getVoices() || [];
+  ttsReader.voices = all;
+
+  const select = document.getElementById("ttsVoice");
+  if (!select) return;
+
+  const previous = select.value;
+  const vietnamese = all.filter(v =>
+    /^vi[-_]/i.test(v.lang || "") ||
+    /vietnam|việt/i.test(`${v.name} ${v.lang}`)
+  );
+
+  select.innerHTML = `<option value="">Tự động chọn giọng Việt</option>`;
+
+  vietnamese.forEach(voice => {
+    const option = document.createElement("option");
+    option.value = voice.name;
+    option.textContent = `${voice.name} (${voice.lang || "vi"})`;
+    select.appendChild(option);
+  });
+
+  if (previous && [...select.options].some(o => o.value === previous)) {
+    select.value = previous;
+  }
+
+  if (!vietnamese.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Thiết bị chưa có giọng Việt riêng";
+    option.disabled = true;
+    select.appendChild(option);
+  }
+}
+
+function updateTtsButtons() {
+  const els = ttsEls();
+  if (!els.player) return;
+
+  els.play.disabled = !ttsReader.supported || !ttsReader.text;
+  els.pause.disabled = !ttsReader.speaking;
+  els.stop.disabled = !ttsReader.speaking;
+
+  if (ttsReader.paused) {
+    els.pause.textContent = "▶ Tiếp tục";
+  } else {
+    els.pause.textContent = "⏸ Tạm dừng";
+  }
+
+  if (ttsReader.speaking && !ttsReader.paused) {
+    els.play.textContent = "🔊 Đang đọc";
+  } else {
+    els.play.textContent = "🔊 Nghe";
+  }
+}
+
+function prepareTtsChapter(text) {
+  const els = ttsEls();
+  if (!els.player) return;
+
+  stopTtsReader(false);
+
+  ttsReader.text = cleanVietnameseText(text || "").trim();
+  ttsReader.chunks = splitTextForSpeech(ttsReader.text);
+  ttsReader.index = 0;
+
+  if (!ttsReader.supported) {
+    els.player.hidden = false;
+    setTtsStatus("Trình duyệt này chưa hỗ trợ đọc văn bản.");
+    updateTtsButtons();
+    return;
+  }
+
+  els.player.hidden = !ttsReader.text;
+
+  if (ttsReader.text) {
+    setTtsStatus(`Sẵn sàng đọc • ${ttsReader.chunks.length} đoạn giọng`);
+  }
+
+  updateTtsButtons();
+}
+
+function hideTtsPlayer() {
+  stopTtsReader(false);
+  const player = document.getElementById("ttsPlayer");
+  if (player) player.hidden = true;
+}
+
+function speakTtsChunk() {
+  if (!ttsReader.supported || !ttsReader.speaking || ttsReader.paused) return;
+
+  if (ttsReader.index >= ttsReader.chunks.length) {
+    ttsReader.speaking = false;
+    ttsReader.paused = false;
+    ttsReader.stopped = true;
+    ttsReader.utterance = null;
+    setTtsStatus("Đã đọc xong chương.");
+    updateTtsButtons();
+    return;
+  }
+
+  const els = ttsEls();
+  const utterance = new SpeechSynthesisUtterance(ttsReader.chunks[ttsReader.index]);
+  const voice = getPreferredVietnameseVoice();
+
+  utterance.lang = voice?.lang || "vi-VN";
+  if (voice) utterance.voice = voice;
+
+  utterance.rate = Number(els.rate?.value || 1);
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  utterance.onstart = () => {
+    const progress = Math.min(ttsReader.index + 1, ttsReader.chunks.length);
+    setTtsStatus(`Đang đọc • đoạn ${progress}/${ttsReader.chunks.length}`);
+    updateTtsButtons();
+  };
+
+  utterance.onend = () => {
+    if (!ttsReader.speaking || ttsReader.paused) return;
+    ttsReader.index += 1;
+
+    // Khoảng nghỉ rất ngắn giữa các đoạn giúp mobile đọc ổn định hơn.
+    setTimeout(speakTtsChunk, 50);
+  };
+
+  utterance.onerror = event => {
+    // "canceled" xảy ra bình thường khi người dùng bấm Dừng/đổi tốc độ.
+    if (event.error === "canceled" || event.error === "interrupted") return;
+
+    console.error("TTS error:", event.error);
+    ttsReader.speaking = false;
+    ttsReader.paused = false;
+    setTtsStatus("Không đọc được trên thiết bị này. Hãy thử đổi giọng hoặc tải lại trang.");
+    updateTtsButtons();
+  };
+
+  ttsReader.utterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
+
+function startTtsReader() {
+  if (!ttsReader.supported || !ttsReader.text) return;
+
+  // Nếu đang tạm dừng thì nút Nghe cũng có thể tiếp tục.
+  if (ttsReader.speaking && ttsReader.paused) {
+    resumeTtsReader();
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  ttsReader.chunks = splitTextForSpeech(ttsReader.text);
+  ttsReader.index = 0;
+  ttsReader.speaking = true;
+  ttsReader.paused = false;
+  ttsReader.stopped = false;
+
+  setTtsStatus("Đang chuẩn bị giọng đọc...");
+  updateTtsButtons();
+
+  setTimeout(speakTtsChunk, 80);
+}
+
+function pauseTtsReader() {
+  if (!ttsReader.supported || !ttsReader.speaking || ttsReader.paused) return;
+
+  window.speechSynthesis.pause();
+  ttsReader.paused = true;
+  setTtsStatus(`Đã tạm dừng • đoạn ${ttsReader.index + 1}/${ttsReader.chunks.length}`);
+  updateTtsButtons();
+}
+
+function resumeTtsReader() {
+  if (!ttsReader.supported || !ttsReader.speaking || !ttsReader.paused) return;
+
+  ttsReader.paused = false;
+  window.speechSynthesis.resume();
+  setTtsStatus(`Đang đọc • đoạn ${ttsReader.index + 1}/${ttsReader.chunks.length}`);
+  updateTtsButtons();
+}
+
+function toggleTtsPause() {
+  if (!ttsReader.speaking) {
+    startTtsReader();
+    return;
+  }
+
+  if (ttsReader.paused) {
+    resumeTtsReader();
+  } else {
+    pauseTtsReader();
+  }
+}
+
+function stopTtsReader(showStatus = true) {
+  if (ttsReader.supported) {
+    window.speechSynthesis.cancel();
+  }
+
+  ttsReader.speaking = false;
+  ttsReader.paused = false;
+  ttsReader.stopped = true;
+  ttsReader.index = 0;
+  ttsReader.utterance = null;
+
+  if (showStatus && ttsReader.text) {
+    setTtsStatus("Đã dừng. Bấm Nghe để đọc lại từ đầu.");
+  }
+
+  updateTtsButtons();
+}
+
+function restartTtsAtCurrentChunk() {
+  if (!ttsReader.speaking) return;
+
+  const current = ttsReader.index;
+  window.speechSynthesis.cancel();
+
+  ttsReader.index = current;
+  ttsReader.paused = false;
+
+  setTimeout(speakTtsChunk, 80);
+}
+
+function initTtsControls() {
+  const els = ttsEls();
+  if (!els.player) return;
+
+  if (!ttsReader.supported) {
+    setTtsStatus("Trình duyệt này chưa hỗ trợ chức năng nghe truyện.");
+    updateTtsButtons();
+    return;
+  }
+
+  loadTtsVoices();
+
+  if ("onvoiceschanged" in window.speechSynthesis) {
+    window.speechSynthesis.addEventListener("voiceschanged", loadTtsVoices);
+  }
+
+  try {
+    const savedRate = localStorage.getItem("tttt_tts_rate");
+    if (savedRate && [...els.rate.options].some(o => o.value === savedRate)) {
+      els.rate.value = savedRate;
+    }
+
+    const savedVoice = localStorage.getItem("tttt_tts_voice");
+    if (savedVoice) {
+      // Chọn lại sau khi voices tải xong.
+      setTimeout(() => {
+        if ([...els.voice.options].some(o => o.value === savedVoice)) {
+          els.voice.value = savedVoice;
+        }
+      }, 500);
+    }
+  } catch (_) {}
+
+  els.play.addEventListener("click", startTtsReader);
+  els.pause.addEventListener("click", toggleTtsPause);
+  els.stop.addEventListener("click", () => stopTtsReader(true));
+
+  els.rate.addEventListener("change", () => {
+    try {
+      localStorage.setItem("tttt_tts_rate", els.rate.value);
+    } catch (_) {}
+
+    // Đang đọc thì áp dụng tốc độ mới từ đoạn hiện tại.
+    restartTtsAtCurrentChunk();
+  });
+
+  els.voice.addEventListener("change", () => {
+    try {
+      localStorage.setItem("tttt_tts_voice", els.voice.value);
+    } catch (_) {}
+
+    restartTtsAtCurrentChunk();
+  });
+
+  window.addEventListener("beforeunload", () => {
+    if (ttsReader.supported) window.speechSynthesis.cancel();
+  });
+
+  updateTtsButtons();
+}
+
+document.addEventListener("DOMContentLoaded", initTtsControls);
+
 function renderReaderContent(text, options = {}) {
   const content = document.getElementById("chapterContent");
 
@@ -197,6 +603,9 @@ function renderReaderContent(text, options = {}) {
 
   protectReaderContent();
   applyReaderWatermark(!!options.isPaidChapter, options.unlockCode || "");
+
+  // Máy đọc chỉ nhận nội dung sau khi quyền đọc chương đã được xác nhận.
+  prepareTtsChapter(text);
 }
 
 function paywallMessage(msg, type = "") {
@@ -347,6 +756,7 @@ async function useExistingUnlockCode() {
 }
 
 function renderLockedBox(chapterData) {
+  hideTtsPlayer();
   const content = document.getElementById("chapterContent");
   content.classList.remove("protected-reader");
   content.removeAttribute("data-copy-protected");
