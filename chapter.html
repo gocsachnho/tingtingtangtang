@@ -630,7 +630,7 @@
 
     .tts-audio-settings {
       display: grid;
-      grid-template-columns: 100px 135px minmax(220px, 1fr);
+      grid-template-columns: 100px minmax(260px, 1fr);
       gap: 10px;
       align-items: end;
       padding-top: 14px;
@@ -707,21 +707,13 @@
       }
 
       .tts-audio-settings {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .tts-audio-voice-field {
-        grid-column: 1 / -1;
+        grid-template-columns: 110px minmax(0, 1fr);
       }
     }
 
     @media (max-width: 430px) {
       .tts-audio-settings {
         grid-template-columns: 1fr;
-      }
-
-      .tts-audio-voice-field {
-        grid-column: auto;
       }
 
       .tts-time-row {
@@ -822,17 +814,8 @@
           </select>
         </label>
 
-        <label class="tts-audio-field tts-gender-field">
-          <span>Kiểu giọng</span>
-          <select id="ttsGender">
-            <option value="auto" selected>Tự động</option>
-            <option value="female">👩 Giọng nữ</option>
-            <option value="male">👨 Giọng nam</option>
-          </select>
-        </label>
-
         <label class="tts-audio-field tts-audio-voice-field">
-          <span>Giọng cụ thể</span>
+          <span>Giọng đọc</span>
           <select id="ttsVoice">
             <option value="">Tự động chọn giọng Việt</option>
           </select>
@@ -855,7 +838,7 @@
 <script src="js/supabase.js"></script>
 <script src="js/text-normalizer.js"></script>
 <script src="js/paywall.js?v=20260829-unlock2"></script>
-<script src="js/chapter.js?v=20260904-audiobook-1"></script>
+<script src="js/chapter.js?v=20260904-audiobook-2"></script>
 <script src="js/comments.js"></script>
 </body>
 </html>
