@@ -196,7 +196,7 @@ function protectReaderContent() {
    - Hiển thị % + thời gian ước tính
    - Lùi / tua khoảng 15 giây
    - Phát / tạm dừng / dừng
-   - Giữ lựa chọn tốc độ, giọng nam/nữ, giọng cụ thể
+   - Giữ lựa chọn tốc độ và giọng đọc cụ thể
    - Tự nhớ vị trí nghe của từng chương trên thiết bị
    Lưu ý: Web Speech API không trả thời lượng audio thật, vì vậy thời gian
    và tua 15 giây là ước tính. Tiến trình bám theo vị trí văn bản đang đọc.
@@ -231,7 +231,6 @@ function ttsEls() {
     back15: document.getElementById("ttsBack15Btn"),
     forward15: document.getElementById("ttsForward15Btn"),
     rate: document.getElementById("ttsRate"),
-    gender: document.getElementById("ttsGender"),
     voice: document.getElementById("ttsVoice"),
     status: document.getElementById("ttsStatus"),
     progress: document.getElementById("ttsProgress"),
@@ -442,31 +441,6 @@ function updateTtsProgressUI(save = true) {
   if (save) saveTtsPosition(false);
 }
 
-function normalizeVoiceName(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function detectVietnameseVoiceGender(voice) {
-  const name = normalizeVoiceName(`${voice?.name || ""} ${voice?.voiceURI || ""}`);
-
-  const femaleHints = [
-    "hoaimy", "hoai my", "female", "woman", "girl",
-    "thao", "linh", "mai", "vy", "my", "ngoc", "thu"
-  ];
-
-  const maleHints = [
-    "namminh", "nam minh", "male", "man", "boy",
-    "minh quan", "quang", "huy", "son", "tuan"
-  ];
-
-  if (femaleHints.some(hint => name.includes(hint))) return "female";
-  if (maleHints.some(hint => name.includes(hint))) return "male";
-  return "unknown";
-}
-
 function getVietnameseVoices() {
   return ttsReader.voices.filter(v =>
     /^vi[-_]/i.test(v.lang || "") ||
@@ -483,48 +457,22 @@ function getPreferredVietnameseVoice() {
     if (chosen) return chosen;
   }
 
-  const vietnamese = getVietnameseVoices();
-  const gender = els.gender?.value || "auto";
-
-  if (gender === "female") {
-    const femaleVoice = vietnamese.find(v => detectVietnameseVoiceGender(v) === "female");
-    if (femaleVoice) return femaleVoice;
-  }
-
-  if (gender === "male") {
-    const maleVoice = vietnamese.find(v => detectVietnameseVoiceGender(v) === "male");
-    if (maleVoice) return maleVoice;
-  }
-
-  return vietnamese[0] || null;
+  return getVietnameseVoices()[0] || null;
 }
 
-function updateVoiceListForGender(showAvailabilityMessage = false) {
+function updateVoiceList() {
   const els = ttsEls();
   if (!els.voice) return;
 
   const previous = els.voice.value;
   const vietnamese = getVietnameseVoices();
-  const gender = els.gender?.value || "auto";
 
-  let visibleVoices = vietnamese;
+  els.voice.innerHTML = `<option value="">Tự động chọn giọng Việt</option>`;
 
-  if (gender === "female") {
-    const femaleVoices = vietnamese.filter(v => detectVietnameseVoiceGender(v) === "female");
-    if (femaleVoices.length) visibleVoices = femaleVoices;
-  } else if (gender === "male") {
-    const maleVoices = vietnamese.filter(v => detectVietnameseVoiceGender(v) === "male");
-    if (maleVoices.length) visibleVoices = maleVoices;
-  }
-
-  els.voice.innerHTML = `<option value="">Tự động theo kiểu giọng</option>`;
-
-  visibleVoices.forEach(voice => {
-    const detected = detectVietnameseVoiceGender(voice);
-    const label = detected === "female" ? "Nữ" : detected === "male" ? "Nam" : "Không xác định";
+  vietnamese.forEach(voice => {
     const option = document.createElement("option");
     option.value = voice.name;
-    option.textContent = `${voice.name} (${voice.lang || ""}) — ${label}`;
+    option.textContent = `${voice.name} (${voice.lang || "vi-VN"})`;
     els.voice.appendChild(option);
   });
 
@@ -540,17 +488,6 @@ function updateVoiceListForGender(showAvailabilityMessage = false) {
     option.textContent = "Thiết bị chưa có giọng tiếng Việt";
     option.disabled = true;
     els.voice.appendChild(option);
-    return;
-  }
-
-  if (!showAvailabilityMessage) return;
-
-  if (gender === "female" && !vietnamese.some(v => detectVietnameseVoiceGender(v) === "female")) {
-    setTtsStatus("Thiết bị này chưa có giọng nữ Việt riêng; sẽ dùng giọng Việt khả dụng.");
-  }
-
-  if (gender === "male" && !vietnamese.some(v => detectVietnameseVoiceGender(v) === "male")) {
-    setTtsStatus("Thiết bị này chưa có giọng nam Việt riêng; sẽ dùng giọng Việt khả dụng.");
   }
 }
 
@@ -569,7 +506,7 @@ function restoreSavedTtsVoice() {
 function loadTtsVoices() {
   if (!ttsReader.supported) return;
   ttsReader.voices = window.speechSynthesis.getVoices() || [];
-  updateVoiceListForGender(false);
+  updateVoiceList();
   restoreSavedTtsVoice();
 }
 
@@ -976,12 +913,10 @@ function initTtsControls() {
       els.rate.value = savedRate;
     }
 
-    const savedGender = localStorage.getItem("tttt_tts_gender");
-    if (savedGender && ["auto", "female", "male"].includes(savedGender)) {
-      els.gender.value = savedGender;
-    }
+    // Xóa lựa chọn nam/nữ cũ nếu trình duyệt từng lưu từ bản trước.
+    localStorage.removeItem("tttt_tts_gender");
 
-    updateVoiceListForGender(false);
+    updateVoiceList();
     restoreSavedTtsVoice();
   } catch (_) {}
 
@@ -1001,16 +936,6 @@ function initTtsControls() {
     } catch (_) {}
 
     updateTtsProgressUI(false);
-    restartTtsAtCurrentPosition();
-  });
-
-  els.gender?.addEventListener("change", () => {
-    try {
-      localStorage.setItem("tttt_tts_gender", els.gender.value);
-      localStorage.removeItem("tttt_tts_voice");
-    } catch (_) {}
-
-    updateVoiceListForGender(true);
     restartTtsAtCurrentPosition();
   });
 
