@@ -191,37 +191,63 @@ function protectReaderContent() {
 
 
 /* =========================================================
-   NGHE TRUYỆN - WEB SPEECH API
-   Dùng giọng TTS có sẵn trên máy/điện thoại, không tạo file audio.
+   NGHE TRUYỆN KIỂU AUDIOBOOK - WEB SPEECH API
+   - Thanh tiến trình kéo được
+   - Hiển thị % + thời gian ước tính
+   - Lùi / tua khoảng 15 giây
+   - Phát / tạm dừng / dừng
+   - Giữ lựa chọn tốc độ, giọng nam/nữ, giọng cụ thể
+   - Tự nhớ vị trí nghe của từng chương trên thiết bị
+   Lưu ý: Web Speech API không trả thời lượng audio thật, vì vậy thời gian
+   và tua 15 giây là ước tính. Tiến trình bám theo vị trí văn bản đang đọc.
 ========================================================= */
 
 const ttsReader = {
   supported: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window,
   text: "",
   chunks: [],
+  chunkStarts: [],
+  totalChars: 0,
   index: 0,
+  offset: 0,
+  globalPosition: 0,
   speaking: false,
   paused: false,
   stopped: true,
   voices: [],
-  utterance: null
+  utterance: null,
+  serial: 0,
+  dragging: false,
+  dragWasPlaying: false,
+  dragWasPaused: false,
+  lastSavedAt: 0
 };
 
 function ttsEls() {
   return {
     player: document.getElementById("ttsPlayer"),
     play: document.getElementById("ttsPlayBtn"),
-    pause: document.getElementById("ttsPauseBtn"),
     stop: document.getElementById("ttsStopBtn"),
+    back15: document.getElementById("ttsBack15Btn"),
+    forward15: document.getElementById("ttsForward15Btn"),
     rate: document.getElementById("ttsRate"),
+    gender: document.getElementById("ttsGender"),
     voice: document.getElementById("ttsVoice"),
-    status: document.getElementById("ttsStatus")
+    status: document.getElementById("ttsStatus"),
+    progress: document.getElementById("ttsProgress"),
+    percent: document.getElementById("ttsPercent"),
+    currentTime: document.getElementById("ttsCurrentTime"),
+    remainingTime: document.getElementById("ttsRemainingTime")
   };
 }
 
 function setTtsStatus(message) {
   const el = document.getElementById("ttsStatus");
   if (el) el.textContent = message;
+}
+
+function ttsPositionStorageKey() {
+  return `tttt_tts_position_${storyId || "story"}_${Number.isFinite(chapterOrder) ? chapterOrder : 1}`;
 }
 
 function splitTextForSpeech(text, maxLength = 190) {
@@ -288,6 +314,166 @@ function splitTextForSpeech(text, maxLength = 190) {
   return chunks;
 }
 
+function rebuildTtsChunkMap() {
+  ttsReader.chunkStarts = [];
+  let total = 0;
+
+  ttsReader.chunks.forEach(chunk => {
+    ttsReader.chunkStarts.push(total);
+    total += chunk.length;
+  });
+
+  ttsReader.totalChars = total;
+}
+
+function ttsPositionToChunk(position) {
+  if (!ttsReader.chunks.length) return { index: 0, offset: 0 };
+
+  const safe = Math.max(0, Math.min(ttsReader.totalChars, Number(position) || 0));
+
+  if (safe >= ttsReader.totalChars) {
+    const last = ttsReader.chunks.length - 1;
+    return { index: last, offset: ttsReader.chunks[last].length };
+  }
+
+  let low = 0;
+  let high = ttsReader.chunkStarts.length - 1;
+  let found = 0;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    if (ttsReader.chunkStarts[mid] <= safe) {
+      found = mid;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  return {
+    index: found,
+    offset: Math.max(0, Math.min(ttsReader.chunks[found].length, safe - ttsReader.chunkStarts[found]))
+  };
+}
+
+function setTtsGlobalPosition(position, refresh = true) {
+  const safe = Math.max(0, Math.min(ttsReader.totalChars, Number(position) || 0));
+  const mapped = ttsPositionToChunk(safe);
+
+  ttsReader.globalPosition = safe;
+  ttsReader.index = mapped.index;
+  ttsReader.offset = mapped.offset;
+
+  if (refresh) updateTtsProgressUI();
+}
+
+function formatTtsTime(seconds) {
+  let value = Number(seconds);
+  if (!Number.isFinite(value) || value < 0) value = 0;
+  value = Math.round(value);
+
+  const hours = Math.floor(value / 3600);
+  const minutes = Math.floor((value % 3600) / 60);
+  const secs = value % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+
+  return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
+function getTtsEstimatedTotalSeconds() {
+  const els = ttsEls();
+  const words = String(ttsReader.text || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean).length;
+
+  const rate = Math.max(0.1, Number(els.rate?.value || 1));
+  const wordsPerMinute = 160 * rate;
+  return words ? (words / wordsPerMinute) * 60 : 0;
+}
+
+function saveTtsPosition(force = false) {
+  if (!ttsReader.text || !ttsReader.totalChars) return;
+
+  const now = Date.now();
+  if (!force && now - ttsReader.lastSavedAt < 700) return;
+  ttsReader.lastSavedAt = now;
+
+  try {
+    if (ttsReader.globalPosition > 0 && ttsReader.globalPosition < ttsReader.totalChars) {
+      localStorage.setItem(ttsPositionStorageKey(), String(Math.floor(ttsReader.globalPosition)));
+    } else if (ttsReader.globalPosition <= 0) {
+      localStorage.removeItem(ttsPositionStorageKey());
+    }
+  } catch (_) {}
+}
+
+function updateTtsProgressUI(save = true) {
+  const els = ttsEls();
+  if (!els.player) return;
+
+  const ratio = ttsReader.totalChars > 0
+    ? Math.max(0, Math.min(1, ttsReader.globalPosition / ttsReader.totalChars))
+    : 0;
+
+  const percent = ratio * 100;
+
+  if (els.progress) {
+    els.progress.value = String(Math.round(percent * 10));
+    els.progress.style.setProperty("--tts-progress", `${percent}%`);
+  }
+
+  if (els.percent) els.percent.textContent = `${Math.round(percent)}%`;
+
+  const totalSeconds = getTtsEstimatedTotalSeconds();
+  const elapsed = totalSeconds * ratio;
+  const remaining = Math.max(0, totalSeconds - elapsed);
+
+  if (els.currentTime) els.currentTime.textContent = formatTtsTime(elapsed);
+  if (els.remainingTime) {
+    els.remainingTime.textContent = ratio >= 1
+      ? "Đã hoàn thành"
+      : `Còn ~${formatTtsTime(remaining)}`;
+  }
+
+  if (save) saveTtsPosition(false);
+}
+
+function normalizeVoiceName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function detectVietnameseVoiceGender(voice) {
+  const name = normalizeVoiceName(`${voice?.name || ""} ${voice?.voiceURI || ""}`);
+
+  const femaleHints = [
+    "hoaimy", "hoai my", "female", "woman", "girl",
+    "thao", "linh", "mai", "vy", "my", "ngoc", "thu"
+  ];
+
+  const maleHints = [
+    "namminh", "nam minh", "male", "man", "boy",
+    "minh quan", "quang", "huy", "son", "tuan"
+  ];
+
+  if (femaleHints.some(hint => name.includes(hint))) return "female";
+  if (maleHints.some(hint => name.includes(hint))) return "male";
+  return "unknown";
+}
+
+function getVietnameseVoices() {
+  return ttsReader.voices.filter(v =>
+    /^vi[-_]/i.test(v.lang || "") ||
+    /vietnam|viet nam|tiếng việt|tieng viet/i.test(`${v.name} ${v.lang}`)
+  );
+}
+
 function getPreferredVietnameseVoice() {
   const els = ttsEls();
   const selectedName = els.voice?.value || "";
@@ -297,68 +483,123 @@ function getPreferredVietnameseVoice() {
     if (chosen) return chosen;
   }
 
-  return (
-    ttsReader.voices.find(v => /^vi[-_]/i.test(v.lang || "")) ||
-    ttsReader.voices.find(v => /vietnam|việt/i.test(`${v.name} ${v.lang}`)) ||
-    null
-  );
+  const vietnamese = getVietnameseVoices();
+  const gender = els.gender?.value || "auto";
+
+  if (gender === "female") {
+    const femaleVoice = vietnamese.find(v => detectVietnameseVoiceGender(v) === "female");
+    if (femaleVoice) return femaleVoice;
+  }
+
+  if (gender === "male") {
+    const maleVoice = vietnamese.find(v => detectVietnameseVoiceGender(v) === "male");
+    if (maleVoice) return maleVoice;
+  }
+
+  return vietnamese[0] || null;
 }
 
-function loadTtsVoices() {
-  if (!ttsReader.supported) return;
+function updateVoiceListForGender(showAvailabilityMessage = false) {
+  const els = ttsEls();
+  if (!els.voice) return;
 
-  const all = window.speechSynthesis.getVoices() || [];
-  ttsReader.voices = all;
+  const previous = els.voice.value;
+  const vietnamese = getVietnameseVoices();
+  const gender = els.gender?.value || "auto";
 
-  const select = document.getElementById("ttsVoice");
-  if (!select) return;
+  let visibleVoices = vietnamese;
 
-  const previous = select.value;
-  const vietnamese = all.filter(v =>
-    /^vi[-_]/i.test(v.lang || "") ||
-    /vietnam|việt/i.test(`${v.name} ${v.lang}`)
-  );
+  if (gender === "female") {
+    const femaleVoices = vietnamese.filter(v => detectVietnameseVoiceGender(v) === "female");
+    if (femaleVoices.length) visibleVoices = femaleVoices;
+  } else if (gender === "male") {
+    const maleVoices = vietnamese.filter(v => detectVietnameseVoiceGender(v) === "male");
+    if (maleVoices.length) visibleVoices = maleVoices;
+  }
 
-  select.innerHTML = `<option value="">Tự động chọn giọng Việt</option>`;
+  els.voice.innerHTML = `<option value="">Tự động theo kiểu giọng</option>`;
 
-  vietnamese.forEach(voice => {
+  visibleVoices.forEach(voice => {
+    const detected = detectVietnameseVoiceGender(voice);
+    const label = detected === "female" ? "Nữ" : detected === "male" ? "Nam" : "Không xác định";
     const option = document.createElement("option");
     option.value = voice.name;
-    option.textContent = `${voice.name} (${voice.lang || "vi"})`;
-    select.appendChild(option);
+    option.textContent = `${voice.name} (${voice.lang || ""}) — ${label}`;
+    els.voice.appendChild(option);
   });
 
-  if (previous && [...select.options].some(o => o.value === previous)) {
-    select.value = previous;
+  if (previous && [...els.voice.options].some(o => o.value === previous)) {
+    els.voice.value = previous;
+  } else {
+    els.voice.value = "";
   }
 
   if (!vietnamese.length) {
     const option = document.createElement("option");
     option.value = "";
-    option.textContent = "Thiết bị chưa có giọng Việt riêng";
+    option.textContent = "Thiết bị chưa có giọng tiếng Việt";
     option.disabled = true;
-    select.appendChild(option);
+    els.voice.appendChild(option);
+    return;
   }
+
+  if (!showAvailabilityMessage) return;
+
+  if (gender === "female" && !vietnamese.some(v => detectVietnameseVoiceGender(v) === "female")) {
+    setTtsStatus("Thiết bị này chưa có giọng nữ Việt riêng; sẽ dùng giọng Việt khả dụng.");
+  }
+
+  if (gender === "male" && !vietnamese.some(v => detectVietnameseVoiceGender(v) === "male")) {
+    setTtsStatus("Thiết bị này chưa có giọng nam Việt riêng; sẽ dùng giọng Việt khả dụng.");
+  }
+}
+
+function restoreSavedTtsVoice() {
+  const els = ttsEls();
+  if (!els.voice) return;
+
+  try {
+    const savedVoice = localStorage.getItem("tttt_tts_voice");
+    if (savedVoice && [...els.voice.options].some(o => o.value === savedVoice)) {
+      els.voice.value = savedVoice;
+    }
+  } catch (_) {}
+}
+
+function loadTtsVoices() {
+  if (!ttsReader.supported) return;
+  ttsReader.voices = window.speechSynthesis.getVoices() || [];
+  updateVoiceListForGender(false);
+  restoreSavedTtsVoice();
 }
 
 function updateTtsButtons() {
   const els = ttsEls();
   if (!els.player) return;
 
-  els.play.disabled = !ttsReader.supported || !ttsReader.text;
-  els.pause.disabled = !ttsReader.speaking;
-  els.stop.disabled = !ttsReader.speaking;
+  const ready = ttsReader.supported && !!ttsReader.text;
 
-  if (ttsReader.paused) {
-    els.pause.textContent = "▶ Tiếp tục";
-  } else {
-    els.pause.textContent = "⏸ Tạm dừng";
+  if (els.play) {
+    els.play.disabled = !ready;
+    els.play.textContent = ttsReader.speaking && !ttsReader.paused ? "Ⅱ" : "▶";
+    els.play.title = ttsReader.speaking && !ttsReader.paused ? "Tạm dừng" : (ttsReader.paused ? "Tiếp tục" : "Nghe");
+    els.play.setAttribute("aria-label", els.play.title);
   }
 
-  if (ttsReader.speaking && !ttsReader.paused) {
-    els.play.textContent = "🔊 Đang đọc";
-  } else {
-    els.play.textContent = "🔊 Nghe";
+  if (els.stop) els.stop.disabled = !ready || (!ttsReader.speaking && ttsReader.globalPosition <= 0);
+  if (els.back15) els.back15.disabled = !ready || ttsReader.globalPosition <= 0;
+  if (els.forward15) els.forward15.disabled = !ready || ttsReader.globalPosition >= ttsReader.totalChars;
+  if (els.progress) els.progress.disabled = !ready;
+}
+
+function cancelCurrentTtsSpeech() {
+  ttsReader.serial += 1;
+  ttsReader.utterance = null;
+
+  if (ttsReader.supported) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch (_) {}
   }
 }
 
@@ -366,75 +607,145 @@ function prepareTtsChapter(text) {
   const els = ttsEls();
   if (!els.player) return;
 
-  stopTtsReader(false);
+  cancelCurrentTtsSpeech();
 
   ttsReader.text = cleanVietnameseText(text || "").trim();
   ttsReader.chunks = splitTextForSpeech(ttsReader.text);
+  rebuildTtsChunkMap();
   ttsReader.index = 0;
+  ttsReader.offset = 0;
+  ttsReader.globalPosition = 0;
+  ttsReader.speaking = false;
+  ttsReader.paused = false;
+  ttsReader.stopped = true;
 
   if (!ttsReader.supported) {
     els.player.hidden = false;
-    setTtsStatus("Trình duyệt này chưa hỗ trợ đọc văn bản.");
+    setTtsStatus("Trình duyệt này chưa hỗ trợ chức năng nghe truyện.");
+    updateTtsProgressUI(false);
     updateTtsButtons();
     return;
   }
 
   els.player.hidden = !ttsReader.text;
 
-  if (ttsReader.text) {
-    setTtsStatus(`Sẵn sàng đọc • ${ttsReader.chunks.length} đoạn giọng`);
+  if (!ttsReader.text) {
+    updateTtsButtons();
+    return;
   }
 
+  let restored = 0;
+  try {
+    restored = Number(localStorage.getItem(ttsPositionStorageKey()) || 0);
+  } catch (_) {}
+
+  if (restored > 0 && restored < ttsReader.totalChars) {
+    setTtsGlobalPosition(restored, false);
+    const percent = Math.round((restored / ttsReader.totalChars) * 100);
+    setTtsStatus(`Tiếp tục vị trí đã nghe • ${percent}% • ${ttsReader.chunks.length} đoạn`);
+  } else {
+    setTtsGlobalPosition(0, false);
+    const minutes = Math.max(1, Math.round(getTtsEstimatedTotalSeconds() / 60));
+    setTtsStatus(`Sẵn sàng đọc • ${ttsReader.chunks.length} đoạn • khoảng ${minutes} phút`);
+  }
+
+  updateTtsProgressUI(false);
   updateTtsButtons();
 }
 
 function hideTtsPlayer() {
-  stopTtsReader(false);
+  cancelCurrentTtsSpeech();
+  ttsReader.speaking = false;
+  ttsReader.paused = false;
   const player = document.getElementById("ttsPlayer");
   if (player) player.hidden = true;
+}
+
+function finishTtsChapter() {
+  cancelCurrentTtsSpeech();
+  ttsReader.speaking = false;
+  ttsReader.paused = false;
+  ttsReader.stopped = true;
+  setTtsGlobalPosition(ttsReader.totalChars, false);
+
+  try {
+    localStorage.removeItem(ttsPositionStorageKey());
+  } catch (_) {}
+
+  setTtsStatus("✓ Đã nghe hết chương");
+  updateTtsProgressUI(false);
+  updateTtsButtons();
 }
 
 function speakTtsChunk() {
   if (!ttsReader.supported || !ttsReader.speaking || ttsReader.paused) return;
 
-  if (ttsReader.index >= ttsReader.chunks.length) {
-    ttsReader.speaking = false;
-    ttsReader.paused = false;
-    ttsReader.stopped = true;
-    ttsReader.utterance = null;
-    setTtsStatus("Đã đọc xong chương.");
-    updateTtsButtons();
+  if (ttsReader.globalPosition >= ttsReader.totalChars || ttsReader.index >= ttsReader.chunks.length) {
+    finishTtsChapter();
+    return;
+  }
+
+  const original = ttsReader.chunks[ttsReader.index];
+  const startOffset = Math.max(0, Math.min(original.length, ttsReader.offset || 0));
+  const speechText = original.slice(startOffset);
+
+  if (!speechText.trim()) {
+    ttsReader.globalPosition = ttsReader.chunkStarts[ttsReader.index] + original.length;
+    ttsReader.index += 1;
+    ttsReader.offset = 0;
+    updateTtsProgressUI();
+    setTimeout(speakTtsChunk, 40);
     return;
   }
 
   const els = ttsEls();
-  const utterance = new SpeechSynthesisUtterance(ttsReader.chunks[ttsReader.index]);
+  const utterance = new SpeechSynthesisUtterance(speechText);
   const voice = getPreferredVietnameseVoice();
+  const serial = ++ttsReader.serial;
 
   utterance.lang = voice?.lang || "vi-VN";
   if (voice) utterance.voice = voice;
-
   utterance.rate = Number(els.rate?.value || 1);
   utterance.pitch = 1;
   utterance.volume = 1;
 
   utterance.onstart = () => {
+    if (serial !== ttsReader.serial) return;
     const progress = Math.min(ttsReader.index + 1, ttsReader.chunks.length);
-    setTtsStatus(`Đang đọc • đoạn ${progress}/${ttsReader.chunks.length}`);
+    setTtsStatus(`Đang nghe • đoạn ${progress}/${ttsReader.chunks.length}`);
+    updateTtsButtons();
+  };
+
+  // Chrome/Edge thường phát sự kiện boundary theo từng từ. Trên thiết bị không hỗ trợ,
+  // thanh vẫn cập nhật chính xác theo từng đoạn khi onend chạy.
+  utterance.onboundary = event => {
+    if (serial !== ttsReader.serial || ttsReader.dragging) return;
+    if (typeof event.charIndex !== "number") return;
+
+    ttsReader.offset = Math.max(0, Math.min(original.length, startOffset + event.charIndex));
+    ttsReader.globalPosition = Math.max(
+      0,
+      Math.min(ttsReader.totalChars, ttsReader.chunkStarts[ttsReader.index] + ttsReader.offset)
+    );
+    updateTtsProgressUI();
     updateTtsButtons();
   };
 
   utterance.onend = () => {
-    if (!ttsReader.speaking || ttsReader.paused) return;
-    ttsReader.index += 1;
+    if (serial !== ttsReader.serial || !ttsReader.speaking || ttsReader.paused) return;
 
-    // Khoảng nghỉ rất ngắn giữa các đoạn giúp mobile đọc ổn định hơn.
-    setTimeout(speakTtsChunk, 50);
+    ttsReader.globalPosition = ttsReader.chunkStarts[ttsReader.index] + original.length;
+    ttsReader.index += 1;
+    ttsReader.offset = 0;
+    updateTtsProgressUI();
+    updateTtsButtons();
+
+    setTimeout(speakTtsChunk, 70);
   };
 
   utterance.onerror = event => {
-    // "canceled" xảy ra bình thường khi người dùng bấm Dừng/đổi tốc độ.
-    if (event.error === "canceled" || event.error === "interrupted") return;
+    if (serial !== ttsReader.serial) return;
+    if (["canceled", "interrupted"].includes(event.error)) return;
 
     console.error("TTS error:", event.error);
     ttsReader.speaking = false;
@@ -450,45 +761,66 @@ function speakTtsChunk() {
 function startTtsReader() {
   if (!ttsReader.supported || !ttsReader.text) return;
 
-  // Nếu đang tạm dừng thì nút Nghe cũng có thể tiếp tục.
+  if (ttsReader.globalPosition >= ttsReader.totalChars) {
+    setTtsGlobalPosition(0, false);
+  }
+
   if (ttsReader.speaking && ttsReader.paused) {
     resumeTtsReader();
     return;
   }
 
-  window.speechSynthesis.cancel();
+  if (ttsReader.speaking && !ttsReader.paused) return;
 
-  ttsReader.chunks = splitTextForSpeech(ttsReader.text);
-  ttsReader.index = 0;
+  cancelCurrentTtsSpeech();
   ttsReader.speaking = true;
   ttsReader.paused = false;
   ttsReader.stopped = false;
 
   setTtsStatus("Đang chuẩn bị giọng đọc...");
   updateTtsButtons();
-
   setTimeout(speakTtsChunk, 80);
 }
 
 function pauseTtsReader() {
   if (!ttsReader.supported || !ttsReader.speaking || ttsReader.paused) return;
 
-  window.speechSynthesis.pause();
+  try {
+    window.speechSynthesis.pause();
+  } catch (_) {}
+
   ttsReader.paused = true;
-  setTtsStatus(`Đã tạm dừng • đoạn ${ttsReader.index + 1}/${ttsReader.chunks.length}`);
+  setTtsStatus(`Đã tạm dừng • đoạn ${Math.min(ttsReader.index + 1, ttsReader.chunks.length)}/${ttsReader.chunks.length}`);
+  saveTtsPosition(true);
   updateTtsButtons();
 }
 
 function resumeTtsReader() {
-  if (!ttsReader.supported || !ttsReader.speaking || !ttsReader.paused) return;
+  if (!ttsReader.supported || !ttsReader.paused) return;
 
   ttsReader.paused = false;
-  window.speechSynthesis.resume();
-  setTtsStatus(`Đang đọc • đoạn ${ttsReader.index + 1}/${ttsReader.chunks.length}`);
+  ttsReader.speaking = true;
+  ttsReader.stopped = false;
+
+  // Nếu utterance vẫn đang được browser giữ khi pause, resume tại đúng từ.
+  if (ttsReader.utterance && window.speechSynthesis.paused) {
+    try {
+      window.speechSynthesis.resume();
+      setTtsStatus(`Đang nghe • đoạn ${Math.min(ttsReader.index + 1, ttsReader.chunks.length)}/${ttsReader.chunks.length}`);
+      updateTtsButtons();
+      return;
+    } catch (_) {}
+  }
+
+  // Nếu trước đó kéo thanh/đổi giọng khiến utterance đã bị hủy thì đọc lại từ vị trí đã lưu.
+  cancelCurrentTtsSpeech();
+  ttsReader.speaking = true;
+  ttsReader.paused = false;
+  setTimeout(speakTtsChunk, 80);
   updateTtsButtons();
 }
 
-function toggleTtsPause() {
+function toggleTtsPlayPause() {
   if (!ttsReader.speaking) {
     startTtsReader();
     return;
@@ -502,33 +834,124 @@ function toggleTtsPause() {
 }
 
 function stopTtsReader(showStatus = true) {
-  if (ttsReader.supported) {
-    window.speechSynthesis.cancel();
-  }
-
+  cancelCurrentTtsSpeech();
   ttsReader.speaking = false;
   ttsReader.paused = false;
   ttsReader.stopped = true;
   ttsReader.index = 0;
-  ttsReader.utterance = null;
+  ttsReader.offset = 0;
+  ttsReader.globalPosition = 0;
+
+  try {
+    localStorage.removeItem(ttsPositionStorageKey());
+  } catch (_) {}
+
+  updateTtsProgressUI(false);
 
   if (showStatus && ttsReader.text) {
-    setTtsStatus("Đã dừng. Bấm Nghe để đọc lại từ đầu.");
+    setTtsStatus("Đã dừng • bấm ▶ để nghe lại từ đầu");
   }
 
   updateTtsButtons();
 }
 
-function restartTtsAtCurrentChunk() {
-  if (!ttsReader.speaking) return;
+function restartTtsAtCurrentPosition() {
+  if (!ttsReader.speaking) {
+    updateTtsProgressUI(false);
+    return;
+  }
 
-  const current = ttsReader.index;
-  window.speechSynthesis.cancel();
+  const wasPaused = ttsReader.paused;
+  cancelCurrentTtsSpeech();
+  ttsReader.speaking = true;
+  ttsReader.paused = wasPaused;
 
-  ttsReader.index = current;
-  ttsReader.paused = false;
+  if (wasPaused) {
+    setTtsStatus(`Đã tạm dừng • đoạn ${Math.min(ttsReader.index + 1, ttsReader.chunks.length)}/${ttsReader.chunks.length}`);
+    updateTtsButtons();
+    return;
+  }
 
   setTimeout(speakTtsChunk, 80);
+}
+
+function seekTtsSeconds(seconds) {
+  if (!ttsReader.text || !ttsReader.totalChars) return;
+
+  const totalSeconds = getTtsEstimatedTotalSeconds();
+  if (!totalSeconds) return;
+
+  const charDelta = (ttsReader.totalChars / totalSeconds) * Number(seconds || 0);
+  const wasSpeaking = ttsReader.speaking;
+  const wasPaused = ttsReader.paused;
+
+  cancelCurrentTtsSpeech();
+  setTtsGlobalPosition(ttsReader.globalPosition + charDelta, false);
+
+  ttsReader.speaking = wasSpeaking;
+  ttsReader.paused = wasPaused;
+
+  updateTtsProgressUI();
+  updateTtsButtons();
+
+  if (wasSpeaking && !wasPaused) {
+    ttsReader.speaking = true;
+    ttsReader.paused = false;
+    setTimeout(speakTtsChunk, 80);
+  } else if (wasPaused) {
+    setTtsStatus(`Đã tạm dừng • đoạn ${Math.min(ttsReader.index + 1, ttsReader.chunks.length)}/${ttsReader.chunks.length}`);
+  }
+}
+
+function beginTtsProgressDrag() {
+  if (ttsReader.dragging) return;
+
+  ttsReader.dragging = true;
+  ttsReader.dragWasPlaying = ttsReader.speaking && !ttsReader.paused;
+  ttsReader.dragWasPaused = ttsReader.speaking && ttsReader.paused;
+
+  if (ttsReader.speaking) cancelCurrentTtsSpeech();
+}
+
+function previewTtsProgressFromSlider() {
+  const els = ttsEls();
+  if (!els.progress || !ttsReader.totalChars) return;
+
+  beginTtsProgressDrag();
+
+  const ratio = Math.max(0, Math.min(1, Number(els.progress.value || 0) / 1000));
+  setTtsGlobalPosition(ratio * ttsReader.totalChars, false);
+  updateTtsProgressUI(false);
+  updateTtsButtons();
+}
+
+function commitTtsProgressDrag() {
+  if (!ttsReader.dragging) return;
+
+  const wasPlaying = ttsReader.dragWasPlaying;
+  const wasPaused = ttsReader.dragWasPaused;
+
+  ttsReader.dragging = false;
+  ttsReader.dragWasPlaying = false;
+  ttsReader.dragWasPaused = false;
+  saveTtsPosition(true);
+
+  if (wasPlaying) {
+    ttsReader.speaking = true;
+    ttsReader.paused = false;
+    ttsReader.stopped = false;
+    setTimeout(speakTtsChunk, 80);
+  } else if (wasPaused) {
+    ttsReader.speaking = true;
+    ttsReader.paused = true;
+    ttsReader.stopped = false;
+    setTtsStatus(`Đã tạm dừng • đoạn ${Math.min(ttsReader.index + 1, ttsReader.chunks.length)}/${ttsReader.chunks.length}`);
+  } else {
+    ttsReader.speaking = false;
+    ttsReader.paused = false;
+  }
+
+  updateTtsButtons();
 }
 
 function initTtsControls() {
@@ -553,46 +976,66 @@ function initTtsControls() {
       els.rate.value = savedRate;
     }
 
-    const savedVoice = localStorage.getItem("tttt_tts_voice");
-    if (savedVoice) {
-      // Chọn lại sau khi voices tải xong.
-      setTimeout(() => {
-        if ([...els.voice.options].some(o => o.value === savedVoice)) {
-          els.voice.value = savedVoice;
-        }
-      }, 500);
+    const savedGender = localStorage.getItem("tttt_tts_gender");
+    if (savedGender && ["auto", "female", "male"].includes(savedGender)) {
+      els.gender.value = savedGender;
     }
+
+    updateVoiceListForGender(false);
+    restoreSavedTtsVoice();
   } catch (_) {}
 
-  els.play.addEventListener("click", startTtsReader);
-  els.pause.addEventListener("click", toggleTtsPause);
-  els.stop.addEventListener("click", () => stopTtsReader(true));
+  els.play?.addEventListener("click", toggleTtsPlayPause);
+  els.stop?.addEventListener("click", () => stopTtsReader(true));
+  els.back15?.addEventListener("click", () => seekTtsSeconds(-15));
+  els.forward15?.addEventListener("click", () => seekTtsSeconds(15));
 
-  els.rate.addEventListener("change", () => {
+  els.progress?.addEventListener("input", previewTtsProgressFromSlider);
+  els.progress?.addEventListener("change", commitTtsProgressDrag);
+  els.progress?.addEventListener("pointerup", commitTtsProgressDrag);
+  els.progress?.addEventListener("touchend", commitTtsProgressDrag, { passive: true });
+
+  els.rate?.addEventListener("change", () => {
     try {
       localStorage.setItem("tttt_tts_rate", els.rate.value);
     } catch (_) {}
 
-    // Đang đọc thì áp dụng tốc độ mới từ đoạn hiện tại.
-    restartTtsAtCurrentChunk();
+    updateTtsProgressUI(false);
+    restartTtsAtCurrentPosition();
   });
 
-  els.voice.addEventListener("change", () => {
+  els.gender?.addEventListener("change", () => {
+    try {
+      localStorage.setItem("tttt_tts_gender", els.gender.value);
+      localStorage.removeItem("tttt_tts_voice");
+    } catch (_) {}
+
+    updateVoiceListForGender(true);
+    restartTtsAtCurrentPosition();
+  });
+
+  els.voice?.addEventListener("change", () => {
     try {
       localStorage.setItem("tttt_tts_voice", els.voice.value);
     } catch (_) {}
 
-    restartTtsAtCurrentChunk();
+    restartTtsAtCurrentPosition();
   });
 
   window.addEventListener("beforeunload", () => {
-    if (ttsReader.supported) window.speechSynthesis.cancel();
+    saveTtsPosition(true);
+    cancelCurrentTtsSpeech();
   });
 
+  updateTtsProgressUI(false);
   updateTtsButtons();
 }
 
-document.addEventListener("DOMContentLoaded", initTtsControls);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initTtsControls);
+} else {
+  initTtsControls();
+}
 
 function renderReaderContent(text, options = {}) {
   const content = document.getElementById("chapterContent");
