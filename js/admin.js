@@ -81,17 +81,61 @@ async function uploadCover(file) {
   return data.publicUrl;
 }
 
+
+async function fetchAllChapters() {
+  const pageSize = 1000;
+  let from = 0;
+  const allRows = [];
+
+  while (true) {
+    const { data, error } = await db
+      .from("chapters")
+      .select("*")
+      .order("story_id", { ascending: true })
+      .order("chapter_order", { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) {
+      console.error("Lỗi tải danh sách chương:", error);
+      throw error;
+    }
+
+    const rows = data || [];
+    allRows.push(...rows);
+
+    if (rows.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return allRows;
+}
+
+async function getNextChapterOrderFromDB(storyId) {
+  if (!storyId) return 1;
+
+  const { data, error } = await db
+    .from("chapters")
+    .select("chapter_order")
+    .eq("story_id", storyId)
+    .order("chapter_order", { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error("Không đọc được số chương cuối từ Supabase:", error);
+    return getNextChapterOrder(storyId);
+  }
+
+  const maxOrder = Number(data?.[0]?.chapter_order || 0);
+  return Number.isFinite(maxOrder) && maxOrder > 0 ? maxOrder + 1 : 1;
+}
+
 async function loadAdminData() {
   const storyResult = await db
     .from("stories")
     .select("*")
     .order("created_at", { ascending: false });
 
-  const chapterResult = await db
-    .from("chapters")
-    .select("*")
-    .order("story_id", { ascending: true })
-    .order("chapter_order", { ascending: true });
+  const allChapterRows = await fetchAllChapters();
 
   const paywallResult = await db
     .from("story_paywalls")
@@ -104,7 +148,7 @@ async function loadAdminData() {
     .limit(200);
 
   stories = storyResult.data || [];
-  chapters = chapterResult.data || [];
+  chapters = allChapterRows;
   paywalls = paywallResult.data || [];
   paymentOrders = paymentResult.data || [];
 
@@ -136,20 +180,22 @@ function getNextChapterOrder(storyId) {
   return orders.length ? Math.max(...orders) + 1 : 1;
 }
 
-function fillNextChapterOrder(storyId, force = false) {
+async function fillNextChapterOrder(storyId, force = false) {
   const form = document.getElementById("chapterForm");
-  if (!form || !storyId) return;
+  if (!form || !storyId) return null;
 
   // Khi đang sửa một chương cũ thì không tự ghi đè số chương đó.
-  if (form.elements.id.value && !force) return;
+  if (form.elements.id.value && !force) return Number(form.elements.chapter_order.value || 0) || null;
 
-  const nextOrder = getNextChapterOrder(storyId);
+  const nextOrder = await getNextChapterOrderFromDB(storyId);
   form.elements.chapter_order.value = nextOrder;
 
   const hint = document.getElementById("chapterOrderHint");
   if (hint) {
     hint.textContent = `Tự động đề xuất: Chương ${nextOrder}. Bạn vẫn có thể sửa số nếu cần.`;
   }
+
+  return nextOrder;
 }
 
 function renderStorySelect() {
@@ -161,14 +207,14 @@ function renderStorySelect() {
     </option>
   `).join("");
 
-  select.onchange = function () {
+  select.onchange = async function () {
     currentStoryId = this.value;
     renderChapters();
-    fillNextChapterOrder(currentStoryId);
+    await fillNextChapterOrder(currentStoryId);
   };
 
-  // Khi mở Admin hoặc tải lại dữ liệu, tự điền số chương kế tiếp.
-  fillNextChapterOrder(currentStoryId);
+  // Khi mở Admin hoặc tải lại dữ liệu, lấy số chương kế tiếp trực tiếp từ Supabase.
+  void fillNextChapterOrder(currentStoryId);
 }
 
 function renderStories() {
@@ -369,8 +415,7 @@ document.getElementById("chapterForm").addEventListener("submit", async function
 
   await loadAdminData();
 
-  const nextOrder = getNextChapterOrder(selectedStoryId);
-  fillNextChapterOrder(selectedStoryId, true);
+  const nextOrder = await fillNextChapterOrder(selectedStoryId, true);
 
   alert(
     `Đã lưu Chương ${chapterOrder}.\n` +
