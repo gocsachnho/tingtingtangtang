@@ -50,14 +50,11 @@ function renderChapterPage(page) {
 
   document.getElementById("chapterList").innerHTML = pageChapters.map(chapter => {
     const locked = !!chapter.is_locked;
-    const rightText = locked
-      ? `🔒 ${ttttFormatVND(chapter.price_vnd || 0)}`
-      : "Đọc →";
 
     return `
       <a class="chapter-row ${locked ? "paid-chapter-row" : ""}" href="${chapterUrl(chapter)}">
         <span>${locked ? "🔒 " : ""}${escapeHtml(chapterLabel(chapter))}</span>
-        <span>${rightText}</span>
+        ${locked ? "" : "<span>Đọc →</span>"}
       </a>
     `;
   }).join("");
