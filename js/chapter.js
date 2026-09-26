@@ -1,4 +1,4 @@
-window.__TTTT_AFFILIATE_BUILD = "chrome-desktop-v7";
+window.__TTTT_AFFILIATE_BUILD = "native-anchor-v8";
 
 const params = new URLSearchParams(location.search);
 const storyId = params.get("id");
@@ -86,15 +86,98 @@ function hideAffiliateContinue() {
   if (box) box.hidden = true;
   if (link) {
     link.onclick = null;
+    link.href = "#";
+    link.removeAttribute("target");
   }
 }
+
+let pendingAffiliateNextUrl = "";
+let pendingAffiliateFallbackTimer = null;
+
+function clearPendingAffiliateNavigation() {
+  pendingAffiliateNextUrl = "";
+
+  if (pendingAffiliateFallbackTimer) {
+    clearTimeout(pendingAffiliateFallbackTimer);
+    pendingAffiliateFallbackTimer = null;
+  }
+
+  try {
+    sessionStorage.removeItem("tttt_pending_affiliate_next");
+  } catch (_) {}
+}
+
+function goToPendingAffiliateNext() {
+  let nextUrl = pendingAffiliateNextUrl;
+
+  if (!nextUrl) {
+    try {
+      nextUrl = sessionStorage.getItem("tttt_pending_affiliate_next") || "";
+    } catch (_) {}
+  }
+
+  if (!nextUrl) return;
+
+  clearPendingAffiliateNavigation();
+
+  // replace() để người đọc bấm Back không quay lại bước affiliate vừa xong.
+  window.location.replace(nextUrl);
+}
+
+function armAffiliateNavigation(nextUrl) {
+  pendingAffiliateNextUrl = nextUrl;
+
+  try {
+    sessionStorage.setItem("tttt_pending_affiliate_next", nextUrl);
+  } catch (_) {}
+
+  if (pendingAffiliateFallbackTimer) {
+    clearTimeout(pendingAffiliateFallbackTimer);
+  }
+
+  // Nếu Chrome mở tab ngoài nhưng vẫn giữ tab truyện ở foreground,
+  // fallback này sẽ chuyển trang truyện sang chương kế.
+  pendingAffiliateFallbackTimer = setTimeout(() => {
+    goToPendingAffiliateNext();
+  }, 900);
+}
+
+// Khi Chrome chuyển focus sang tab Shopee/TikTok hoặc app ngoài,
+// chuyển tab truyện hiện tại sang chương kế NGAY trước khi trình duyệt có thể freeze.
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && pendingAffiliateNextUrl) {
+    goToPendingAffiliateNext();
+  }
+});
+
+window.addEventListener("blur", () => {
+  if (pendingAffiliateNextUrl) {
+    goToPendingAffiliateNext();
+  }
+});
+
+// Trên mobile, nếu trình duyệt freeze trước khi kịp chuyển,
+// lúc người đọc quay lại tab truyện thì chuyển ngay sang chương kế.
+window.addEventListener("focus", () => {
+  let hasPending = !!pendingAffiliateNextUrl;
+
+  if (!hasPending) {
+    try {
+      hasPending = !!sessionStorage.getItem("tttt_pending_affiliate_next");
+    } catch (_) {}
+  }
+
+  if (hasPending) {
+    goToPendingAffiliateNext();
+  }
+});
 
 function setupAffiliateContinue(shortlink, nextChapter, story) {
   const externalUrl = normalizeAffiliateUrl(shortlink);
   const box = document.getElementById("affiliateContinueBox");
-  const mainButton = document.getElementById("affiliateContinueLink");
+  const mainLink = document.getElementById("affiliateContinueLink");
 
-  if (!box || !mainButton || !externalUrl) {
+  if (!box || !mainLink || !externalUrl) {
     hideAffiliateContinue();
     return;
   }
@@ -105,45 +188,34 @@ function setupAffiliateContinue(shortlink, nextChapter, story) {
 
   box.hidden = false;
 
-  // Dùng đúng cơ chế window.open() đã test thành công trên Chrome desktop.
-  // Link ngoài mở NGAY trong click của người dùng.
-  function openAffiliateAndContinue(event) {
-    if (event) event.preventDefault();
+  // QUAN TRỌNG:
+  // Không dùng window.open(), không preventDefault().
+  // Đây là anchor thật target=_blank để Chrome tự mở tab mới.
+  function configureExternalAnchor(el) {
+    if (!el) return;
 
-    const newTab = window.open(externalUrl, "_blank");
+    el.href = externalUrl;
+    el.target = "_blank";
+    el.rel = "noopener sponsored";
+    el.classList.add("affiliate-nav-required");
 
-    if (!newTab) {
-      alert(
-        "Chrome đang chặn tab mới. " +
-        "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
-      );
-      return false;
-    }
+    el.onclick = () => {
+      armAffiliateNavigation(nextUrl);
 
-    // Không đổi focus, không blur, không tạo popup named window.
-    // Đợi một chút để Chrome tạo tab Shopee/TikTok xong rồi mới
-    // chuyển tab truyện hiện tại (lúc này thường đang ở nền) sang chương kế.
-    setTimeout(() => {
-      window.location.href = nextUrl;
-    }, 600);
-
-    return false;
+      // Phải return true / không preventDefault để target=_blank chạy tự nhiên.
+      return true;
+    };
   }
 
-  mainButton.onclick = openAffiliateAndContinue;
+  configureExternalAnchor(mainLink);
 
-  // QUAN TRỌNG:
-  // Cả nút Chương sau phía trên và phía dưới cũng dùng CHÍNH XÁC
-  // cùng một handler. Không còn chỉ cuộn xuống nút affiliate.
   ["nextTop", "nextBottom"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
 
-    el.href = "#";
     el.textContent = "🔗 Mở liên kết để sang chương sau";
     el.classList.remove("disabled");
-    el.classList.add("affiliate-nav-required");
-    el.onclick = openAffiliateAndContinue;
+    configureExternalAnchor(el);
   });
 }
 function setNav(elId, chapter) {
@@ -151,6 +223,8 @@ function setNav(elId, chapter) {
   if (!el) return;
 
   el.onclick = null;
+  el.removeAttribute("target");
+  el.removeAttribute("rel");
   el.classList.remove("affiliate-nav-required");
 
   const isNext = elId === "nextTop" || elId === "nextBottom";
