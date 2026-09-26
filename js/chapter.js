@@ -83,7 +83,6 @@ function hideAffiliateContinue() {
 
   if (box) box.hidden = true;
   if (link) {
-    link.removeAttribute("href");
     link.onclick = null;
   }
 }
@@ -103,43 +102,57 @@ function setupAffiliateContinue(shortlink, nextChapter, story) {
     : `story.html?id=${encodeURIComponent(story.id)}`;
 
   box.hidden = false;
-  link.href = "#affiliateContinueBox";
 
   link.onclick = event => {
     event.preventDefault();
 
-    // CHROME DESKTOP:
-    // 1) Mở một tab trắng ngay trong chính thao tác click.
-    //    Việc này ổn định hơn mở thẳng link Shopee rút gọn.
-    const externalTab = window.open("about:blank", "_blank");
+    // Chrome desktop: mở CỬA SỔ POPUP RIÊNG thay vì tab mới.
+    // Đây là thao tác trực tiếp từ click nên ít bị Chrome chặn hơn.
+    const w = 560;
+    const h = 760;
+    const left = Math.max(0, Math.round((screen.width - w) / 2));
+    const top = Math.max(0, Math.round((screen.height - h) / 2));
 
-    if (!externalTab) {
+    const popup = window.open(
+      "about:blank",
+      "ttttAffiliatePopup",
+      `popup=yes,width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+
+    if (!popup) {
       alert(
-        "Chrome đang chặn tab mới. " +
+        "Chrome đang chặn cửa sổ bật lên. " +
         "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
       );
       return false;
     }
 
-    // 2) Tách tab mới khỏi trang truyện rồi mới đưa tab đó sang Shopee/TikTok.
+    // Đưa popup sang Shopee/TikTok.
     try {
-      externalTab.opener = null;
-      externalTab.document.title = "Đang mở liên kết...";
-      externalTab.document.body.innerHTML =
+      popup.document.title = "Đang mở Shopee/TikTok...";
+      popup.document.body.innerHTML =
         '<p style="font-family:Arial,sans-serif;padding:24px">' +
         'Đang mở Shopee/TikTok...</p>';
     } catch (_) {}
 
     try {
-      externalTab.location.replace(externalUrl);
+      popup.location.replace(externalUrl);
     } catch (_) {
-      externalTab.location.href = externalUrl;
+      popup.location.href = externalUrl;
     }
 
-    // 3) TAB TRUYỆN HIỆN TẠI chỉ chuyển sang chương tiếp theo.
-    //    Không có bất kỳ lệnh nào đưa tab này sang Shopee/TikTok.
-    window.location.href = nextUrl;
+    // Cố gắng trả focus về trang truyện rồi chuyển sang chương kế.
+    try {
+      popup.blur();
+      window.focus();
+    } catch (_) {}
 
+    // Đánh dấu để trang chương kế gọi focus lại một lần nữa sau khi tải.
+    try {
+      sessionStorage.setItem("tttt_focus_reader_after_affiliate", "1");
+    } catch (_) {}
+
+    window.location.assign(nextUrl);
     return false;
   };
 
@@ -1019,6 +1032,23 @@ function renderLockedBox(chapterData) {
   }
 }
 
+
+
+function restoreReaderFocusAfterAffiliate() {
+  try {
+    const shouldFocus = sessionStorage.getItem("tttt_focus_reader_after_affiliate") === "1";
+    if (!shouldFocus) return;
+
+    sessionStorage.removeItem("tttt_focus_reader_after_affiliate");
+
+    setTimeout(() => {
+      try {
+        window.focus();
+      } catch (_) {}
+    }, 120);
+  } catch (_) {}
+}
+
 async function loadChapter() {
   if (!storyId || !Number.isFinite(chapterOrder)) {
     document.getElementById("chapterTitle").textContent = "Không tìm thấy chương";
@@ -1100,3 +1130,11 @@ async function loadChapter() {
 }
 
 loadChapter();
+
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", restoreReaderFocusAfterAffiliate);
+} else {
+  restoreReaderFocusAfterAffiliate();
+}
+
