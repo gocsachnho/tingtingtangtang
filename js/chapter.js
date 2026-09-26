@@ -61,8 +61,85 @@ function splitParagraphs(text) {
     .filter(Boolean);
 }
 
+
+
+/* LINK AFFILIATE: mở Shopee/TikTok ở app/tab khác rồi chuyển chương hiện tại */
+function normalizeAffiliateUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  try {
+    const url = new URL(raw, window.location.href);
+    if (!["http:", "https:"].includes(url.protocol)) return "";
+    return url.href;
+  } catch (_) {
+    return "";
+  }
+}
+
+function hideAffiliateContinue() {
+  const box = document.getElementById("affiliateContinueBox");
+  const link = document.getElementById("affiliateContinueLink");
+
+  if (box) box.hidden = true;
+  if (link) {
+    link.removeAttribute("href");
+    link.onclick = null;
+  }
+}
+
+function setupAffiliateContinue(shortlink, nextChapter, story) {
+  const externalUrl = normalizeAffiliateUrl(shortlink);
+  const box = document.getElementById("affiliateContinueBox");
+  const link = document.getElementById("affiliateContinueLink");
+
+  if (!box || !link || !externalUrl) {
+    hideAffiliateContinue();
+    return;
+  }
+
+  const nextUrl = nextChapter
+    ? chapterUrl(nextChapter)
+    : `story.html?id=${encodeURIComponent(story.id)}`;
+
+  box.hidden = false;
+  link.href = externalUrl;
+
+  link.onclick = () => {
+    // Không chặn click mặc định: target=_blank giúp link có cơ hội mở app/tab khác.
+    setTimeout(() => {
+      window.location.href = nextUrl;
+    }, 180);
+  };
+
+  // Với chương có affiliate, nút "Chương sau" sẽ đưa xuống nút affiliate
+  // thay vì cho bỏ qua trực tiếp.
+  ["nextTop", "nextBottom"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.href = "#affiliateContinueBox";
+    el.textContent = "🔗 Mở liên kết để sang chương sau";
+    el.classList.remove("disabled");
+    el.classList.add("affiliate-nav-required");
+
+    el.onclick = event => {
+      event.preventDefault();
+      box.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => link.focus({ preventScroll: true }), 250);
+    };
+  });
+}
+
 function setNav(elId, chapter) {
   const el = document.getElementById(elId);
+  if (!el) return;
+
+  el.onclick = null;
+  el.classList.remove("affiliate-nav-required");
+
+  const isNext = elId === "nextTop" || elId === "nextBottom";
+  el.textContent = isNext ? "Chương sau →" : "← Chương trước";
 
   if (!chapter) {
     el.href = "#";
@@ -970,6 +1047,16 @@ async function loadChapter() {
     setNav("prevBottom", prevChapter);
     setNav("nextTop", nextChapter);
     setNav("nextBottom", nextChapter);
+
+    if (chapterData.access_granted) {
+      setupAffiliateContinue(
+        chapterData.shortlink || chapterMeta.shortlink || "",
+        nextChapter,
+        story
+      );
+    } else {
+      hideAffiliateContinue();
+    }
   } catch (err) {
     console.error("Lỗi tải chương:", err);
     document.getElementById("chapterTitle").textContent = "Chưa cài hệ thống thu phí";
