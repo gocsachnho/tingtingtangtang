@@ -1,3 +1,5 @@
+window.__TTTT_AFFILIATE_BUILD = "chrome-desktop-v7";
+
 const params = new URLSearchParams(location.search);
 const storyId = params.get("id");
 const chapterOrder = Number(params.get("chapter") || 1);
@@ -90,9 +92,9 @@ function hideAffiliateContinue() {
 function setupAffiliateContinue(shortlink, nextChapter, story) {
   const externalUrl = normalizeAffiliateUrl(shortlink);
   const box = document.getElementById("affiliateContinueBox");
-  const link = document.getElementById("affiliateContinueLink");
+  const mainButton = document.getElementById("affiliateContinueLink");
 
-  if (!box || !link || !externalUrl) {
+  if (!box || !mainButton || !externalUrl) {
     hideAffiliateContinue();
     return;
   }
@@ -103,78 +105,47 @@ function setupAffiliateContinue(shortlink, nextChapter, story) {
 
   box.hidden = false;
 
-  link.onclick = event => {
-    event.preventDefault();
+  // Dùng đúng cơ chế window.open() đã test thành công trên Chrome desktop.
+  // Link ngoài mở NGAY trong click của người dùng.
+  function openAffiliateAndContinue(event) {
+    if (event) event.preventDefault();
 
-    // Chrome desktop: mở CỬA SỔ POPUP RIÊNG thay vì tab mới.
-    // Đây là thao tác trực tiếp từ click nên ít bị Chrome chặn hơn.
-    const w = 560;
-    const h = 760;
-    const left = Math.max(0, Math.round((screen.width - w) / 2));
-    const top = Math.max(0, Math.round((screen.height - h) / 2));
+    const newTab = window.open(externalUrl, "_blank");
 
-    const popup = window.open(
-      "about:blank",
-      "ttttAffiliatePopup",
-      `popup=yes,width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
-    );
-
-    if (!popup) {
+    if (!newTab) {
       alert(
-        "Chrome đang chặn cửa sổ bật lên. " +
+        "Chrome đang chặn tab mới. " +
         "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
       );
       return false;
     }
 
-    // Đưa popup sang Shopee/TikTok.
-    try {
-      popup.document.title = "Đang mở Shopee/TikTok...";
-      popup.document.body.innerHTML =
-        '<p style="font-family:Arial,sans-serif;padding:24px">' +
-        'Đang mở Shopee/TikTok...</p>';
-    } catch (_) {}
+    // Không đổi focus, không blur, không tạo popup named window.
+    // Đợi một chút để Chrome tạo tab Shopee/TikTok xong rồi mới
+    // chuyển tab truyện hiện tại (lúc này thường đang ở nền) sang chương kế.
+    setTimeout(() => {
+      window.location.href = nextUrl;
+    }, 600);
 
-    try {
-      popup.location.replace(externalUrl);
-    } catch (_) {
-      popup.location.href = externalUrl;
-    }
-
-    // Cố gắng trả focus về trang truyện rồi chuyển sang chương kế.
-    try {
-      popup.blur();
-      window.focus();
-    } catch (_) {}
-
-    // Đánh dấu để trang chương kế gọi focus lại một lần nữa sau khi tải.
-    try {
-      sessionStorage.setItem("tttt_focus_reader_after_affiliate", "1");
-    } catch (_) {}
-
-    window.location.assign(nextUrl);
     return false;
-  };
+  }
 
-  // Với chương có affiliate, nút "Chương sau" sẽ đưa xuống nút affiliate
-  // thay vì cho bỏ qua trực tiếp.
+  mainButton.onclick = openAffiliateAndContinue;
+
+  // QUAN TRỌNG:
+  // Cả nút Chương sau phía trên và phía dưới cũng dùng CHÍNH XÁC
+  // cùng một handler. Không còn chỉ cuộn xuống nút affiliate.
   ["nextTop", "nextBottom"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
 
-    el.href = "#affiliateContinueBox";
+    el.href = "#";
     el.textContent = "🔗 Mở liên kết để sang chương sau";
     el.classList.remove("disabled");
     el.classList.add("affiliate-nav-required");
-
-    el.onclick = event => {
-      event.preventDefault();
-      box.scrollIntoView({ behavior: "smooth", block: "center" });
-      setTimeout(() => link.focus({ preventScroll: true }), 250);
-    };
+    el.onclick = openAffiliateAndContinue;
   });
 }
-
 function setNav(elId, chapter) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -1034,20 +1005,6 @@ function renderLockedBox(chapterData) {
 
 
 
-function restoreReaderFocusAfterAffiliate() {
-  try {
-    const shouldFocus = sessionStorage.getItem("tttt_focus_reader_after_affiliate") === "1";
-    if (!shouldFocus) return;
-
-    sessionStorage.removeItem("tttt_focus_reader_after_affiliate");
-
-    setTimeout(() => {
-      try {
-        window.focus();
-      } catch (_) {}
-    }, 120);
-  } catch (_) {}
-}
 
 async function loadChapter() {
   if (!storyId || !Number.isFinite(chapterOrder)) {
@@ -1132,9 +1089,4 @@ async function loadChapter() {
 loadChapter();
 
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", restoreReaderFocusAfterAffiliate);
-} else {
-  restoreReaderFocusAfterAffiliate();
-}
 
