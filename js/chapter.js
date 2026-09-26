@@ -103,13 +103,27 @@ function setupAffiliateContinue(shortlink, nextChapter, story) {
     : `story.html?id=${encodeURIComponent(story.id)}`;
 
   box.hidden = false;
-  link.href = externalUrl;
+  link.href = "#affiliateContinueBox";
 
-  link.onclick = () => {
-    // Không chặn click mặc định: target=_blank giúp link có cơ hội mở app/tab khác.
-    setTimeout(() => {
-      window.location.href = nextUrl;
-    }, 180);
+  link.onclick = event => {
+    event.preventDefault();
+
+    const externalWindow = window.open(externalUrl, "_blank");
+
+    if (!externalWindow) {
+      alert(
+        "Trình duyệt đang chặn cửa sổ mới. " +
+        "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
+      );
+      return false;
+    }
+
+    try {
+      externalWindow.opener = null;
+    } catch (_) {}
+
+    window.location.assign(nextUrl);
+    return false;
   };
 
   // Với chương có affiliate, nút "Chương sau" sẽ đưa xuống nút affiliate
