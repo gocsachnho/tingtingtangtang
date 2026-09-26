@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Test popup affiliate Chrome</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:760px;margin:50px auto;padding:20px;line-height:1.6}
+input{width:100%;padding:10px;box-sizing:border-box;margin:8px 0 14px}
+button{padding:11px 18px;border:0;border-radius:8px;background:#d987bf;color:#fff;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<h2>Test cửa sổ affiliate</h2>
+<p>Dán link Shopee/TikTok rồi bấm. Link phải mở trong một cửa sổ riêng.</p>
+<input id="url" placeholder="https://...">
+<button id="btn">Mở cửa sổ riêng</button>
+<script>
+document.getElementById("btn").onclick=function(){
+  const raw=document.getElementById("url").value.trim();
+  let target="";
+  try{
+    const u=new URL(raw);
+    if(!["http:","https:"].includes(u.protocol)) throw new Error();
+    target=u.href;
+  }catch(_){return alert("Link không hợp lệ");}
+
+  const w=560,h=760;
+  const left=Math.max(0,Math.round((screen.width-w)/2));
+  const top=Math.max(0,Math.round((screen.height-h)/2));
+  const popup=window.open(
+    "about:blank",
+    "ttttAffiliatePopup",
+    `popup=yes,width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`
+  );
+  if(!popup)return alert("Chrome đang chặn pop-up.");
+  popup.location.replace(target);
+  try{popup.blur();window.focus();}catch(_){}
+};
+</script>
+</body>
+</html>
