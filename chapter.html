@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+  <meta name="affiliate-build" content="v9-hardfix-inline">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Đọc chương - Ting Ting Tang Tang</title>
@@ -500,5 +501,170 @@
 <script src="js/paywall.js?v=20260829-unlock2"></script>
 <script src="js/chapter.js?v=20260926-native-anchor-v8"></script>
 <script src="js/comments.js"></script>
+
+<script>
+/* =========================================================
+   AFFILIATE HARD FIX V9
+   - Chạy trực tiếp trong chapter.html
+   - Tự đọc shortlink + chương kế từ Supabase RPC
+   - Capture click trước mọi handler cũ
+   - Shopee/TikTok mở tab mới
+   - Tab truyện hiện tại chuyển ngay sang chương kế
+========================================================= */
+(function () {
+  const BUILD = "AFFILIATE-HARD-FIX-V9";
+
+  function safeHttpUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+
+    try {
+      const u = new URL(raw, location.href);
+      return ["http:", "https:"].includes(u.protocol) ? u.href : "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function chapterUrlV9(chapter, storyId) {
+    if (!chapter) return `story.html?id=${encodeURIComponent(storyId)}`;
+
+    return `chapter.html?id=${encodeURIComponent(storyId)}&chapter=${encodeURIComponent(chapter.chapter_order)}`;
+  }
+
+  async function initAffiliateV9() {
+    const params = new URLSearchParams(location.search);
+    const storyId = params.get("id");
+    const currentOrder = Number(params.get("chapter") || 0);
+
+    if (!storyId || !Number.isFinite(currentOrder) || currentOrder <= 0) return;
+
+    // Đợi các file Supabase/paywall của website tải xong.
+    let tries = 0;
+    while (
+      tries < 40 &&
+      (typeof window.ttttRpc !== "function" || typeof window.db === "undefined")
+    ) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      tries += 1;
+    }
+
+    if (typeof window.ttttRpc !== "function") {
+      console.warn(BUILD, "Không tìm thấy ttttRpc");
+      return;
+    }
+
+    let unlockCode = null;
+    try {
+      if (typeof window.ttttGetUnlockCode === "function") {
+        unlockCode = window.ttttGetUnlockCode(storyId) || null;
+      }
+    } catch (_) {}
+
+    let list = [];
+    try {
+      const rows = await window.ttttRpc("tttt_list_chapters", {
+        p_story_id: storyId,
+        p_unlock_code: unlockCode
+      });
+      list = Array.isArray(rows) ? rows : [];
+    } catch (err) {
+      console.error(BUILD, err);
+      return;
+    }
+
+    const index = list.findIndex(
+      row => Number(row.chapter_order) === currentOrder
+    );
+
+    if (index < 0) return;
+
+    const current = list[index];
+    const next = list[index + 1];
+    const externalUrl = safeHttpUrl(current.shortlink || "");
+
+    if (!externalUrl) return;
+
+    const nextUrl = chapterUrlV9(next, storyId);
+    const box = document.getElementById("affiliateContinueBox");
+    const mainLink = document.getElementById("affiliateContinueLink");
+
+    if (box) {
+      box.hidden = false;
+      box.dataset.affiliateBuild = "v9";
+    }
+
+    function forceAffiliateClick(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof event.stopImmediatePropagation === "function") {
+        event.stopImmediatePropagation();
+      }
+
+      // MỞ LINK NGOÀI TRỰC TIẾP TRONG USER CLICK.
+      const newTab = window.open(externalUrl, "_blank");
+
+      if (!newTab) {
+        alert(
+          "Chrome đang chặn tab mới. " +
+          "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
+        );
+        return false;
+      }
+
+      // CHUYỂN TAB TRUYỆN NGAY LẬP TỨC.
+      // Không dùng timer để tránh tab nền bị Chrome/điện thoại freeze.
+      window.location.replace(nextUrl);
+      return false;
+    }
+
+    function wire(el, label) {
+      if (!el) return;
+
+      // Gỡ handler DOM cũ nếu có.
+      el.onclick = null;
+
+      // Giữ href ngoài để nhìn đúng link, nhưng handler capture sẽ điều khiển.
+      el.href = externalUrl;
+      el.target = "_blank";
+      el.rel = "noopener sponsored";
+      el.classList.remove("disabled");
+      el.classList.add("affiliate-nav-required");
+
+      if (label) el.textContent = label;
+
+      // Capture = chạy trước onclick/bubble handler cũ.
+      el.addEventListener("click", forceAffiliateClick, true);
+      el.dataset.affiliateBuild = "v9";
+    }
+
+    wire(mainLink, "🔗 Nhấn vào đây để sang chương tiếp theo");
+    wire(
+      document.getElementById("nextTop"),
+      "🔗 Mở liên kết để sang chương sau"
+    );
+    wire(
+      document.getElementById("nextBottom"),
+      "🔗 Mở liên kết để sang chương sau"
+    );
+
+    console.log(BUILD, {
+      storyId,
+      currentOrder,
+      externalUrl,
+      nextUrl
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(initAffiliateV9, 250);
+    });
+  } else {
+    setTimeout(initAffiliateV9, 250);
+  }
+})();
+</script>
+
 </body>
 </html>
