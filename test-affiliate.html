@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Test Chrome mở tab affiliate</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:760px;margin:50px auto;padding:20px;line-height:1.6}
+input{width:100%;padding:10px;margin:8px 0 14px;box-sizing:border-box}
+button{padding:11px 18px;border:0;border-radius:8px;background:#d987bf;color:white;font-weight:700;cursor:pointer}
+.note{background:#fff4fa;padding:14px;border-radius:10px;margin-top:18px}
+</style>
+</head>
+<body>
+<h2>Test mở Shopee/TikTok ở tab mới</h2>
+<p>Dán link Shopee/TikTok vào ô dưới rồi bấm nút test.</p>
+<input id="url" placeholder="https://...">
+<button id="testBtn">Mở link ở tab mới</button>
+<div class="note">
+Kết quả đúng trên Chrome máy tính: link ngoài mở ở tab mới, còn trang test này vẫn giữ nguyên.
+</div>
+<script>
+document.getElementById("testBtn").onclick = function () {
+  const raw = document.getElementById("url").value.trim();
+  if (!raw) return alert("Hãy dán link trước.");
+
+  let target;
+  try {
+    const u = new URL(raw);
+    if (!["http:","https:"].includes(u.protocol)) throw new Error();
+    target = u.href;
+  } catch (_) {
+    return alert("Link không hợp lệ.");
+  }
+
+  const tab = window.open("about:blank", "_blank");
+  if (!tab) {
+    alert("Chrome đang chặn pop-up/tab mới cho website này.");
+    return;
+  }
+
+  try { tab.opener = null; } catch (_) {}
+  tab.location.replace(target);
+};
+</script>
+</body>
+</html>
