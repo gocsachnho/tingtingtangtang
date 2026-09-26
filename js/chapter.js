@@ -108,21 +108,38 @@ function setupAffiliateContinue(shortlink, nextChapter, story) {
   link.onclick = event => {
     event.preventDefault();
 
-    const externalWindow = window.open(externalUrl, "_blank");
+    // CHROME DESKTOP:
+    // 1) Mở một tab trắng ngay trong chính thao tác click.
+    //    Việc này ổn định hơn mở thẳng link Shopee rút gọn.
+    const externalTab = window.open("about:blank", "_blank");
 
-    if (!externalWindow) {
+    if (!externalTab) {
       alert(
-        "Trình duyệt đang chặn cửa sổ mới. " +
+        "Chrome đang chặn tab mới. " +
         "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
       );
       return false;
     }
 
+    // 2) Tách tab mới khỏi trang truyện rồi mới đưa tab đó sang Shopee/TikTok.
     try {
-      externalWindow.opener = null;
+      externalTab.opener = null;
+      externalTab.document.title = "Đang mở liên kết...";
+      externalTab.document.body.innerHTML =
+        '<p style="font-family:Arial,sans-serif;padding:24px">' +
+        'Đang mở Shopee/TikTok...</p>';
     } catch (_) {}
 
-    window.location.assign(nextUrl);
+    try {
+      externalTab.location.replace(externalUrl);
+    } catch (_) {
+      externalTab.location.href = externalUrl;
+    }
+
+    // 3) TAB TRUYỆN HIỆN TẠI chỉ chuyển sang chương tiếp theo.
+    //    Không có bất kỳ lệnh nào đưa tab này sang Shopee/TikTok.
+    window.location.href = nextUrl;
+
     return false;
   };
 
