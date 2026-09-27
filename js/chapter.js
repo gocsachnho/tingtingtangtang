@@ -91,87 +91,6 @@ function hideAffiliateContinue() {
   }
 }
 
-let pendingAffiliateNextUrl = "";
-let pendingAffiliateFallbackTimer = null;
-
-function clearPendingAffiliateNavigation() {
-  pendingAffiliateNextUrl = "";
-
-  if (pendingAffiliateFallbackTimer) {
-    clearTimeout(pendingAffiliateFallbackTimer);
-    pendingAffiliateFallbackTimer = null;
-  }
-
-  try {
-    sessionStorage.removeItem("tttt_pending_affiliate_next");
-  } catch (_) {}
-}
-
-function goToPendingAffiliateNext() {
-  let nextUrl = pendingAffiliateNextUrl;
-
-  if (!nextUrl) {
-    try {
-      nextUrl = sessionStorage.getItem("tttt_pending_affiliate_next") || "";
-    } catch (_) {}
-  }
-
-  if (!nextUrl) return;
-
-  clearPendingAffiliateNavigation();
-
-  // replace() để người đọc bấm Back không quay lại bước affiliate vừa xong.
-  window.location.replace(nextUrl);
-}
-
-function armAffiliateNavigation(nextUrl) {
-  pendingAffiliateNextUrl = nextUrl;
-
-  try {
-    sessionStorage.setItem("tttt_pending_affiliate_next", nextUrl);
-  } catch (_) {}
-
-  if (pendingAffiliateFallbackTimer) {
-    clearTimeout(pendingAffiliateFallbackTimer);
-  }
-
-  // Nếu Chrome mở tab ngoài nhưng vẫn giữ tab truyện ở foreground,
-  // fallback này sẽ chuyển trang truyện sang chương kế.
-  pendingAffiliateFallbackTimer = setTimeout(() => {
-    goToPendingAffiliateNext();
-  }, 900);
-}
-
-// Khi Chrome chuyển focus sang tab Shopee/TikTok hoặc app ngoài,
-// chuyển tab truyện hiện tại sang chương kế NGAY trước khi trình duyệt có thể freeze.
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden && pendingAffiliateNextUrl) {
-    goToPendingAffiliateNext();
-  }
-});
-
-window.addEventListener("blur", () => {
-  if (pendingAffiliateNextUrl) {
-    goToPendingAffiliateNext();
-  }
-});
-
-// Trên mobile, nếu trình duyệt freeze trước khi kịp chuyển,
-// lúc người đọc quay lại tab truyện thì chuyển ngay sang chương kế.
-window.addEventListener("focus", () => {
-  let hasPending = !!pendingAffiliateNextUrl;
-
-  if (!hasPending) {
-    try {
-      hasPending = !!sessionStorage.getItem("tttt_pending_affiliate_next");
-    } catch (_) {}
-  }
-
-  if (hasPending) {
-    goToPendingAffiliateNext();
-  }
-});
-
 function setupAffiliateContinue(shortlink, nextChapter, story) {
   const externalUrl = normalizeAffiliateUrl(shortlink);
   const box = document.getElementById("affiliateContinueBox");
@@ -188,35 +107,55 @@ function setupAffiliateContinue(shortlink, nextChapter, story) {
 
   box.hidden = false;
 
-  // QUAN TRỌNG:
-  // Không dùng window.open(), không preventDefault().
-  // Đây là anchor thật target=_blank để Chrome tự mở tab mới.
-  function configureExternalAnchor(el) {
-    if (!el) return;
+  function openAffiliateThenContinue(event) {
+    event.preventDefault();
 
-    el.href = externalUrl;
-    el.target = "_blank";
-    el.rel = "noopener sponsored";
-    el.classList.add("affiliate-nav-required");
+    // Mở 1 trang trung gian CÙNG DOMAIN ở tab mới.
+    // Trang trung gian chưa mở Shopee ngay, nên Chrome/mobile chưa bị app chiếm focus.
+    const helperUrl =
+      `affiliate-open.html?url=${encodeURIComponent(externalUrl)}`;
 
-    el.onclick = () => {
-      armAffiliateNavigation(nextUrl);
+    const helperTab = window.open(helperUrl, "_blank");
 
-      // Phải return true / không preventDefault để target=_blank chạy tự nhiên.
-      return true;
-    };
+    if (!helperTab) {
+      alert(
+        "Trình duyệt đang chặn tab mới. " +
+        "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
+      );
+      return false;
+    }
+
+    // Chuyển tab truyện hiện tại sang chương kế NGAY,
+    // trước khi tab mới mở Shopee/TikTok/app.
+    window.location.replace(nextUrl);
+
+    return false;
   }
 
-  configureExternalAnchor(mainLink);
-
-  ["nextTop", "nextBottom"].forEach(id => {
-    const el = document.getElementById(id);
+  function wire(el, label) {
     if (!el) return;
 
-    el.textContent = "🔗 Mở liên kết để sang chương sau";
+    el.onclick = openAffiliateThenContinue;
+    el.removeAttribute("target");
+    el.removeAttribute("rel");
+    el.href = "#";
     el.classList.remove("disabled");
-    configureExternalAnchor(el);
-  });
+    el.classList.add("affiliate-nav-required");
+
+    if (label) el.textContent = label;
+  }
+
+  wire(mainLink, "🔗 Nhấn vào đây để sang chương tiếp theo");
+
+  wire(
+    document.getElementById("nextTop"),
+    "🔗 Mở liên kết để sang chương sau"
+  );
+
+  wire(
+    document.getElementById("nextBottom"),
+    "🔗 Mở liên kết để sang chương sau"
+  );
 }
 function setNav(elId, chapter) {
   const el = document.getElementById(elId);
@@ -1056,6 +995,13 @@ function renderLockedBox(chapterData) {
 
       <div id="paymentDetails"></div>
       <p id="paymentStatus" class="payment-status"></p>
+
+      <p class="payment-support-note">
+        Nếu bạn đã chuyển khoản mà vẫn chưa được duyệt, vui lòng inbox page
+        <a href="https://www.facebook.com/tingtingtangtang1985" target="_blank" rel="noopener noreferrer">Ting Ting Tang Tang</a>
+        hoặc email:
+        <a href="mailto:hoathuytinhxanh@gmail.com">hoathuytinhxanh@gmail.com</a> nhé.
+      </p>
 
       <div class="unlock-existing">
         <h3>Đã mua trước đó?</h3>
