@@ -996,12 +996,12 @@ function renderLockedBox(chapterData) {
       <div id="paymentDetails"></div>
       <p id="paymentStatus" class="payment-status"></p>
 
-      <p class="payment-support-note">
+      <div class="payment-support-note">
         Nếu bạn đã chuyển khoản mà vẫn chưa được duyệt, vui lòng inbox page
         <a href="https://www.facebook.com/tingtingtangtang1985" target="_blank" rel="noopener noreferrer">Ting Ting Tang Tang</a>
         hoặc email:
         <a href="mailto:hoathuytinhxanh@gmail.com">hoathuytinhxanh@gmail.com</a> nhé.
-      </p>
+      </div>
 
       <div class="unlock-existing">
         <h3>Đã mua trước đó?</h3>
