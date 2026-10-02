@@ -1,5 +1,3 @@
-window.__TTTT_AFFILIATE_BUILD = "native-anchor-v8";
-
 const params = new URLSearchParams(location.search);
 const storyId = params.get("id");
 const chapterOrder = Number(params.get("chapter") || 1);
@@ -65,106 +63,11 @@ function splitParagraphs(text) {
 
 
 
-/* LINK AFFILIATE: mở Shopee/TikTok ở app/tab khác rồi chuyển chương hiện tại */
-function normalizeAffiliateUrl(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-
-  try {
-    const url = new URL(raw, window.location.href);
-    if (!["http:", "https:"].includes(url.protocol)) return "";
-    return url.href;
-  } catch (_) {
-    return "";
-  }
-}
-
-function hideAffiliateContinue() {
-  const box = document.getElementById("affiliateContinueBox");
-  const link = document.getElementById("affiliateContinueLink");
-
-  if (box) box.hidden = true;
-  if (link) {
-    link.onclick = null;
-    link.href = "#";
-    link.removeAttribute("target");
-  }
-}
-
-function setupAffiliateContinue(shortlink, nextChapter, story) {
-  const externalUrl = normalizeAffiliateUrl(shortlink);
-  const box = document.getElementById("affiliateContinueBox");
-  const mainLink = document.getElementById("affiliateContinueLink");
-
-  if (!box || !mainLink || !externalUrl) {
-    hideAffiliateContinue();
-    return;
-  }
-
-  const nextUrl = nextChapter
-    ? chapterUrl(nextChapter)
-    : `story.html?id=${encodeURIComponent(story.id)}`;
-
-  box.hidden = false;
-
-  function openAffiliateThenContinue(event) {
-    event.preventDefault();
-
-    // Mở 1 trang trung gian CÙNG DOMAIN ở tab mới.
-    // Trang trung gian chưa mở Shopee ngay, nên Chrome/mobile chưa bị app chiếm focus.
-    const helperUrl =
-      `affiliate-open.html?url=${encodeURIComponent(externalUrl)}`;
-
-    const helperTab = window.open(helperUrl, "_blank");
-
-    if (!helperTab) {
-      alert(
-        "Trình duyệt đang chặn tab mới. " +
-        "Hãy cho phép pop-up cho chamdoctruyen.info rồi bấm lại."
-      );
-      return false;
-    }
-
-    // Chuyển tab truyện hiện tại sang chương kế NGAY,
-    // trước khi tab mới mở Shopee/TikTok/app.
-    window.location.replace(nextUrl);
-
-    return false;
-  }
-
-  function wire(el, label) {
-    if (!el) return;
-
-    el.onclick = openAffiliateThenContinue;
-    el.removeAttribute("target");
-    el.removeAttribute("rel");
-    el.href = "#";
-    el.classList.remove("disabled");
-    el.classList.add("affiliate-nav-required");
-
-    if (label) el.textContent = label;
-  }
-
-  wire(mainLink, "🔗 Nhấn vào đây để sang chương tiếp theo");
-
-  wire(
-    document.getElementById("nextTop"),
-    "🔗 Mở liên kết để sang chương sau"
-  );
-
-  wire(
-    document.getElementById("nextBottom"),
-    "🔗 Mở liên kết để sang chương sau"
-  );
-}
 function setNav(elId, chapter) {
   const el = document.getElementById(elId);
   if (!el) return;
 
   el.onclick = null;
-  el.removeAttribute("target");
-  el.removeAttribute("rel");
-  el.classList.remove("affiliate-nav-required");
 
   const isNext = elId === "nextTop" || elId === "nextBottom";
   el.textContent = isNext ? "Chương sau →" : "← Chương trước";
@@ -1086,15 +989,6 @@ async function loadChapter() {
     setNav("nextTop", nextChapter);
     setNav("nextBottom", nextChapter);
 
-    if (chapterData.access_granted) {
-      setupAffiliateContinue(
-        chapterData.shortlink || chapterMeta.shortlink || "",
-        nextChapter,
-        story
-      );
-    } else {
-      hideAffiliateContinue();
-    }
   } catch (err) {
     console.error("Lỗi tải chương:", err);
     document.getElementById("chapterTitle").textContent = "Chưa cài hệ thống thu phí";

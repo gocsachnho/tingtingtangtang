@@ -15,10 +15,6 @@ function makeSlug(text) {
 }
 
 function chapterUrl(chapter) {
-  // QUAN TRỌNG:
-  // shortlink chỉ là link affiliate (Shopee/TikTok), KHÔNG phải URL của chương.
-  // Mọi liên kết chương luôn phải trỏ về chapter.html của website.
   if (!chapter) return "#";
-
   return `chapter.html?id=${encodeURIComponent(chapter.story_id)}&chapter=${encodeURIComponent(chapter.chapter_order)}`;
 }

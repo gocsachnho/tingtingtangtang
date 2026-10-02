@@ -267,7 +267,7 @@ function renderChapters() {
       <div class="admin-item">
         <div>
           <b>${isPaid ? "🔒 " : ""}${chapterLabel(chapter)}</b>
-          <p class="meta">${isPaid ? "Trả phí" : "Miễn phí"} · ${chapter.shortlink ? "Có link rút gọn" : "Không có link rút gọn"}</p>
+          <p class="meta">${isPaid ? "Trả phí" : "Miễn phí"}</p>
         </div>
         <div>
           <button type="button" onclick="editChapter(${chapter.id})">Sửa</button>
@@ -380,8 +380,7 @@ document.getElementById("chapterForm").addEventListener("submit", async function
     story_id: selectedStoryId,
     chapter_order: chapterOrder,
     title: cleanVietnameseText(fd.get("title") || ""),
-    content: cleanVietnameseText(fd.get("content")),
-    shortlink: fd.get("shortlink") || ""
+    content: cleanVietnameseText(fd.get("content"))
   };
 
   let error;
@@ -410,7 +409,6 @@ document.getElementById("chapterForm").addEventListener("submit", async function
   form.elements.chapter_order.value = "";
   form.elements.title.value = "";
   form.elements.content.value = "";
-  form.elements.shortlink.value = "";
   form.elements.story_id.value = selectedStoryId;
 
   await loadAdminData();
@@ -437,7 +435,6 @@ function editChapter(id) {
   form.elements.chapter_order.value = chapter.chapter_order;
   form.elements.title.value = cleanVietnameseText(chapter.title || "");
   form.elements.content.value = cleanVietnameseText(chapter.content || "");
-  form.elements.shortlink.value = chapter.shortlink || "";
 
   renderStorySelect();
   renderChapters();
