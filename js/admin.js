@@ -171,6 +171,76 @@ function chapterLabel(chapter) {
 }
 
 
+function parseVolumeChapterTitle(chapter) {
+  const raw = cleanVietnameseText(chapter.title || "").trim();
+  const fallbackChapter = `Chương ${chapter.chapter_order}`;
+
+  if (!raw) {
+    return { volume: "", chapter: fallbackChapter };
+  }
+
+  const fullMatch = raw.match(
+    /^Quyển\s*(\d+)\s*[:：]\s*(.+?)\s*[-–—]\s*Chương\s*(\d+)\s*[:：]\s*(.+)$/i
+  );
+
+  if (fullMatch) {
+    return {
+      volume: `Quyển ${fullMatch[1]}: ${fullMatch[2].trim()}`,
+      chapter: `Chương ${fullMatch[3]}: ${fullMatch[4].trim()}`
+    };
+  }
+
+  const volumeOnly = raw.match(/^Quyển\s*(\d+)\s*[:：]\s*(.+)$/i);
+  if (volumeOnly) {
+    return {
+      volume: `Quyển ${volumeOnly[1]}: ${volumeOnly[2].trim()}`,
+      chapter: fallbackChapter
+    };
+  }
+
+  if (/^Chương\s*\d+\s*[:：]/i.test(raw)) {
+    return { volume: "", chapter: raw };
+  }
+
+  return {
+    volume: "",
+    chapter: `${fallbackChapter}: ${raw}`
+  };
+}
+
+function buildVolumeGroups(chapterList) {
+  const groups = [];
+  let currentGroup = null;
+
+  chapterList.forEach(chapter => {
+    const parsed = parseVolumeChapterTitle(chapter);
+
+    if (parsed.volume) {
+      currentGroup = {
+        volume: parsed.volume,
+        chapters: []
+      };
+      groups.push(currentGroup);
+    }
+
+    if (!currentGroup) {
+      currentGroup = {
+        volume: "",
+        chapters: []
+      };
+      groups.push(currentGroup);
+    }
+
+    currentGroup.chapters.push({
+      chapter,
+      label: parsed.chapter
+    });
+  });
+
+  return groups;
+}
+
+
 function getNextChapterOrder(storyId) {
   const orders = chapters
     .filter(chapter => chapter.story_id === storyId)
@@ -251,31 +321,46 @@ function renderChapters() {
 
   if (!filteredChapters.length) {
     box.innerHTML = `
-      <h3 style="color:#ffd369;margin-bottom:15px;">Danh sách chương của: ${selectedStory.title}</h3>
+      <h3 class="admin-chapter-list-title">
+        Danh sách quyển / chương của: ${cleanVietnameseText(selectedStory.title)}
+      </h3>
       <p class="meta">Truyện này chưa có chương.</p>
     `;
     return;
   }
 
   const pw = paywalls.find(p => p.story_id === currentStoryId);
+  const groups = buildVolumeGroups(filteredChapters);
 
   box.innerHTML = `
-    <h3 style="color:#b96fa3;margin-bottom:15px;">Danh sách chương của: ${selectedStory.title}</h3>
-    ${filteredChapters.map(chapter => {
-      const isPaid = !!pw?.enabled && Number(chapter.chapter_order) > Number(pw.free_until || 0);
-      return `
-      <div class="admin-item">
-        <div>
-          <b>${isPaid ? "🔒 " : ""}${chapterLabel(chapter)}</b>
-          <p class="meta">${isPaid ? "Trả phí" : "Miễn phí"}</p>
-        </div>
-        <div>
-          <button type="button" onclick="editChapter(${chapter.id})">Sửa</button>
-          <button type="button" class="delete-btn" onclick="deleteChapter(${chapter.id})">Xóa</button>
-        </div>
-      </div>
-    `;
-    }).join("")}
+    <h3 class="admin-chapter-list-title">
+      Danh sách quyển / chương của: ${cleanVietnameseText(selectedStory.title)}
+    </h3>
+
+    ${groups.map(group => `
+      <section class="admin-volume-group">
+        ${group.volume ? `<div class="admin-volume-title">📚 ${group.volume}</div>` : ""}
+
+        ${group.chapters.map(item => {
+          const chapter = item.chapter;
+          const isPaid = !!pw?.enabled &&
+            Number(chapter.chapter_order) > Number(pw.free_until || 0);
+
+          return `
+            <div class="admin-item admin-volume-chapter">
+              <div>
+                <b>${isPaid ? "🔒 " : ""}${item.label}</b>
+                <p class="meta">${isPaid ? "Trả phí" : "Miễn phí"}</p>
+              </div>
+              <div>
+                <button type="button" onclick="editChapter(${chapter.id})">Sửa</button>
+                <button type="button" class="delete-btn" onclick="deleteChapter(${chapter.id})">Xóa</button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </section>
+    `).join("")}
   `;
 }
 
