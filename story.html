@@ -351,7 +351,34 @@
       font-size: 14px !important;
     }
 
-  </style>
+  
+    /* HIỂN THỊ TÊN QUYỂN TRÊN TRANG CHI TIẾT TRUYỆN */
+    .story-volume-title {
+      margin: 18px 0 10px;
+      padding: 10px 14px;
+      border-left: 4px solid #d987bf;
+      border-radius: 9px;
+      background: #fff2f9;
+      color: #9f4f89;
+      font-family: "Nunito", Arial, sans-serif;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.4;
+    }
+
+    .story-volume-title:first-child {
+      margin-top: 4px;
+    }
+
+    @media (max-width: 650px) {
+      .story-volume-title {
+        margin: 14px 0 8px;
+        padding: 9px 11px;
+        font-size: 15px;
+      }
+    }
+
+</style>
 </head>
 
 <body>
@@ -375,7 +402,7 @@
 <main class="detail">
   <div id="storyDetail"></div>
 
-  <h2>Danh sách chương</h2>
+  <h2>Danh sách quyển / chương</h2>
   <div id="chapterList"></div>
   <div id="commentBox"></div>
   <div id="pagination"></div>
@@ -409,10 +436,10 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase.js"></script>
+<script src="js/supabase.js?v=20260926-rootfix-v10"></script>
 <script src="js/text-normalizer.js"></script>
 <script src="js/paywall.js"></script>
-<script src="js/story.js?v=20260923-hide-price-1"></script>
+<script src="js/story.js?v=20261004-volume-public-v17"></script>
 
 </body>
 </html>
