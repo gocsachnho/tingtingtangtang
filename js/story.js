@@ -33,35 +33,112 @@ function formatDescription(text) {
     .join("");
 }
 
+function parseVolumeChapterTitle(chapter) {
+  const raw = cleanVietnameseText(chapter.title || "").trim();
+  const order = Number(chapter.chapter_order);
+
+  if (!raw) {
+    return {
+      volume: "",
+      chapter: `Chương ${order}`
+    };
+  }
+
+  // Ví dụ:
+  // Quyển 1: Hung Thú Vô Hình - Chương 1: Quỷ Giết Người
+  const fullMatch = raw.match(
+    /^Quyển\s*(\d+)\s*[:：]\s*(.+?)\s*[-–—]\s*Chương\s*(\d+)\s*[:：]?\s*(.*)$/i
+  );
+
+  if (fullMatch) {
+    const chapterName = String(fullMatch[4] || "").trim();
+
+    return {
+      volume: `Quyển ${fullMatch[1]}: ${fullMatch[2].trim()}`,
+      chapter: chapterName
+        ? `Chương ${fullMatch[3]}: ${chapterName}`
+        : `Chương ${fullMatch[3]}`
+    };
+  }
+
+  // Nếu tên đã bắt đầu bằng "Chương x" thì không cộng thêm lần nữa.
+  if (/^Chương\s*\d+/i.test(raw)) {
+    return {
+      volume: "",
+      chapter: raw.replace(/^Chương\s*(\d+)\s*[:：]?\s*/i, (m, n) => {
+        const rest = m.replace(/^Chương\s*\d+\s*[:：]?\s*/i, "");
+        return rest ? `Chương ${n}: ` : `Chương ${n}`;
+      })
+    };
+  }
+
+  return {
+    volume: "",
+    chapter: `Chương ${order}: ${raw}`
+  };
+}
+
+function buildChapterDisplayList(chapters) {
+  let currentVolume = "";
+
+  return chapters.map(chapter => {
+    const parsed = parseVolumeChapterTitle(chapter);
+
+    if (parsed.volume) {
+      currentVolume = parsed.volume;
+    }
+
+    return {
+      chapter,
+      volume: currentVolume,
+      label: parsed.chapter
+    };
+  });
+}
+
 function chapterLabel(chapter) {
-  const name = cleanVietnameseText(chapter.title || "").trim();
-  return name
-    ? `Chương ${chapter.chapter_order}: ${name}`
-    : `Chương ${chapter.chapter_order}`;
+  return parseVolumeChapterTitle(chapter).chapter;
 }
 
 function renderChapterPage(page) {
   currentPage = page;
 
-  const totalPages = Math.ceil(allChapters.length / CHAPTERS_PER_PAGE);
+  const displayList = buildChapterDisplayList(allChapters);
+  const totalPages = Math.ceil(displayList.length / CHAPTERS_PER_PAGE);
   const start = (page - 1) * CHAPTERS_PER_PAGE;
   const end = start + CHAPTERS_PER_PAGE;
-  const pageChapters = allChapters.slice(start, end);
+  const pageItems = displayList.slice(start, end);
 
-  document.getElementById("chapterList").innerHTML = pageChapters.map(chapter => {
+  let lastVolume = null;
+  let html = "";
+
+  pageItems.forEach((item, index) => {
+    const chapter = item.chapter;
     const locked = !!chapter.is_locked;
 
-    return `
+    // Hiện tên Quyển khi bắt đầu một Quyển mới.
+    // Nếu trang phân trang bắt đầu giữa Quyển, vẫn hiện tên Quyển ở đầu trang.
+    if (item.volume && (index === 0 || item.volume !== lastVolume)) {
+      html += `
+        <div class="story-volume-title">
+          📚 ${escapeHtml(item.volume)}
+        </div>
+      `;
+    }
+
+    html += `
       <a class="chapter-row ${locked ? "paid-chapter-row" : ""}" href="${chapterUrl(chapter)}">
-        <span>${locked ? "🔒 " : ""}${escapeHtml(chapterLabel(chapter))}</span>
+        <span>${locked ? "🔒 " : ""}${escapeHtml(item.label)}</span>
         ${locked ? "" : "<span>Đọc →</span>"}
       </a>
     `;
-  }).join("");
 
+    lastVolume = item.volume;
+  });
+
+  document.getElementById("chapterList").innerHTML = html;
   renderPagination(totalPages);
 }
-
 function renderPagination(totalPages) {
   const pagination = document.getElementById("pagination");
 
