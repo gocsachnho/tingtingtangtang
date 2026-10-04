@@ -174,7 +174,35 @@
       font-weight: 800 !important;
     }
 
-  </style>
+  
+    /* DANH SÁCH QUYỂN / CHƯƠNG TRONG ADMIN */
+    .admin-chapter-list-title {
+      color: #b96fa3;
+      margin: 0 0 16px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .admin-volume-group {
+      margin: 0 0 22px;
+    }
+
+    .admin-volume-title {
+      margin: 0 0 10px;
+      padding: 10px 13px;
+      border-left: 4px solid #d987bf;
+      border-radius: 8px;
+      background: #fff1f8;
+      color: #9e4f88;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .admin-volume-chapter {
+      margin-bottom: 10px;
+    }
+
+</style>
 </head>
 
 <body>
@@ -240,7 +268,7 @@
           </section>
 
           <section class="admin-box">
-            <h2>Danh sách chương</h2>
+            <h2>Danh sách quyển / chương</h2>
             <div id="adminChapterList"></div>
           </section>
         </section>
@@ -327,6 +355,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js?v=20260926-rootfix-v10"></script>
 <script src="js/text-normalizer.js"></script>
-<script src="js/admin.js?v=20261002-remove-affiliate-v15"></script>
+<script src="js/admin.js?v=20261004-volume-groups-v16"></script>
 </body>
 </html>
